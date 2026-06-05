@@ -10,19 +10,21 @@ export function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-  const product = getProduct("decor", params.slug);
+  const { slug } = await params;
+  const product = getProduct("decor", slug);
   if (!product) return { title: "Not found" };
   return { title: product.name, description: product.description };
 }
 
-export default function DecorProductPage({
+export default async function DecorProductPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  const product = getProduct("decor", params.slug);
+  const { slug } = await params;
+  const product = getProduct("decor", slug);
   if (!product) notFound();
 
   return (

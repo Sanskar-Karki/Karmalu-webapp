@@ -10,19 +10,21 @@ export function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: {
-  params: { category: string };
+  params: Promise<{ category: string }>;
 }): Promise<Metadata> {
-  const category = getCategory("decor", params.category);
+  const { category: slug } = await params;
+  const category = getCategory("decor", slug);
   if (!category) return { title: "Not found" };
   return { title: category.name, description: category.tagline };
 }
 
-export default function DecorCategoryPage({
+export default async function DecorCategoryPage({
   params,
 }: {
-  params: { category: string };
+  params: Promise<{ category: string }>;
 }) {
-  const category = getCategory("decor", params.category);
+  const { category: slug } = await params;
+  const category = getCategory("decor", slug);
   if (!category) notFound();
 
   return (

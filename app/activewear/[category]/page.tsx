@@ -10,19 +10,21 @@ export function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: {
-  params: { category: string };
+  params: Promise<{ category: string }>;
 }): Promise<Metadata> {
-  const category = getCategory("activewear", params.category);
+  const { category: slug } = await params;
+  const category = getCategory("activewear", slug);
   if (!category) return { title: "Not found" };
   return { title: category.name, description: category.tagline };
 }
 
-export default function ActivewearCategoryPage({
+export default async function ActivewearCategoryPage({
   params,
 }: {
-  params: { category: string };
+  params: Promise<{ category: string }>;
 }) {
-  const category = getCategory("activewear", params.category);
+  const { category: slug } = await params;
+  const category = getCategory("activewear", slug);
   if (!category) notFound();
 
   return <ActivewearCategoryView category={category} />;
