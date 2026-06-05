@@ -1,0 +1,22 @@
+{
+  "activewear": [
+    { "id": "aw-1", "name": "Flex Training Tee",    "category": "Tops",      "price": 34, "sport": "GYM",     "image": "/images/aw/flex-tee.jpg" },
+    { "id": "aw-2", "name": "Trail Runner Short",   "category": "Shorts",    "price": 42, "sport": "RUNNING", "image": "/images/aw/trail-short.jpg" },
+    { "id": "aw-3", "name": "Knockout Hand Wrap",   "category": "Gear",      "price": 28, "sport": "BOXING",  "image": "/images/aw/wrap.jpg" },
+    { "id": "aw-4", "name": "Zen Flow Legging",     "category": "Leggings",  "price": 48, "sport": "YOGA",    "image": "/images/aw/zen-legging.jpg" },
+    { "id": "aw-5", "name": "Everyday Hoodie",      "category": "Outerwear", "price": 55, "sport": "NORMAL",  "image": "/images/aw/hoodie.jpg" },
+    { "id": "aw-6", "name": "Power Lift Tank",      "category": "Tops",      "price": 30, "sport": "GYM",     "image": "/images/aw/lift-tank.jpg" },
+    { "id": "aw-7", "name": "Pace Compression Tee", "category": "Tops",      "price": 38, "sport": "RUNNING", "image": "/images/aw/pace-tee.jpg" },
+    { "id": "aw-8", "name": "Studio Mat Strap",     "category": "Gear",      "price": 22, "sport": "YOGA",    "image": "/images/aw/mat-strap.jpg" }
+  ],
+  "livingDecor": [
+    { "id": "ld-1", "name": "Saffron Wool Rug",     "category": "Rugs",     "price": 180, "image": "/images/ld/rug.jpg" },
+    { "id": "ld-2", "name": "Linen Throw Cushion",  "category": "Cushions", "price": 32,  "image": "/images/ld/cushion.jpg" },
+    { "id": "ld-3", "name": "Terracotta Vase",      "category": "Vases",    "price": 45,  "image": "/images/ld/vase.jpg" },
+    { "id": "ld-4", "name": "Sunset Canvas Print",  "category": "Wall Art", "price": 90,  "image": "/images/ld/wallart.jpg" },
+    { "id": "ld-5", "name": "Warm Glow Table Lamp", "category": "Lamps",    "price": 64,  "image": "/images/ld/lamp.jpg" },
+    { "id": "ld-6", "name": "Braided Jute Rug",     "category": "Rugs",     "price": 145, "image": "/images/ld/jute-rug.jpg" },
+    { "id": "ld-7", "name": "Velvet Lumbar Cushion","category": "Cushions", "price": 38,  "image": "/images/ld/velvet-cushion.jpg" },
+    { "id": "ld-8", "name": "Stoneware Bud Vase",   "category": "Vases",    "price": 26,  "image": "/images/ld/bud-vase.jpg" }
+  ]
+}
