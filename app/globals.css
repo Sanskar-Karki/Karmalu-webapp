@@ -1,0 +1,126 @@
+@import "tailwindcss";
+
+@theme {
+  /* KARMALU core palette */
+  --color-cherry: #9E2A2B;
+  --color-cherry-dark: #7a1f20;
+  --color-cherry-light: #c44647;
+  --color-beige: #F5F0E6;
+  --color-cream: #FFF9F0;
+  --color-ink: #2D2A24;
+  --color-ink-muted: #6b6560;
+  --color-surface: #ffffff;
+
+  /* Living & Decor — champagne gold */
+  --color-gold: #C9A24B;
+  --color-gold-dark: #a8842f;
+  --color-gold-light: #ddc07e;
+
+  --font-display: var(--font-plus-jakarta);
+  --font-body: var(--font-inter);
+
+  --radius-card: 1.25rem;
+  --radius-btn: 9999px;
+
+  --shadow-card: 0 4px 24px 0 rgba(45,42,36,0.08);
+  --shadow-card-hover: 0 12px 40px 0 rgba(45,42,36,0.16);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  /* default brand accent = cherry; brand layouts override --brand-* */
+  --brand: var(--color-cherry);
+  --brand-dark: var(--color-cherry-dark);
+  --brand-light: var(--color-cherry-light);
+  --brand-soft: rgba(158, 42, 43, 0.10);
+  --brand-contrast: #ffffff;
+  --page-bg: var(--color-cream);
+
+  background-color: var(--page-bg);
+  color: var(--color-ink);
+  font-family: var(--font-body), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Brand themes (set on a wrapper element) ── */
+.theme-decor {
+  --brand: var(--color-gold);
+  --brand-dark: var(--color-gold-dark);
+  --brand-light: var(--color-gold-light);
+  --brand-soft: rgba(201, 162, 75, 0.12);
+  --brand-contrast: #ffffff;
+  --page-bg: var(--color-cream);
+}
+
+.theme-activewear {
+  --brand: #FEA1A1;
+  --brand-dark: #e07070;
+  --brand-light: #ffc4c4;
+  --brand-soft: rgba(254, 161, 161, 0.15);
+  --brand-contrast: #1A1A1A;
+  --page-bg: #F9FBE7;
+  --aw-bg: #F9FBE7;
+  --aw-secondary: #F0EDD4;
+  --aw-accent: #ECCDB4;
+  --aw-highlight: #FEA1A1;
+  --aw-ink: #1A1A1A;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display), system-ui, sans-serif;
+}
+
+::selection {
+  background-color: var(--brand);
+  color: #fff;
+}
+
+/* Utility: hide scrollbar on horizontal filter rows */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up { animation: fade-in-up 0.5s ease both; }
+
+/* ── Activewear motion ── */
+@keyframes ken-burns {
+  0%   { transform: scale(1.05) translate(0, 0); }
+  100% { transform: scale(1.18) translate(-1.5%, -1.5%); }
+}
+.animate-ken-burns { animation: ken-burns 14s ease-out infinite alternate; }
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee 22s linear infinite;
+  will-change: transform;
+}
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.rise-in { animation: rise-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.rise-in-1 { animation-delay: 0.08s; }
+.rise-in-2 { animation-delay: 0.18s; }
+.rise-in-3 { animation-delay: 0.28s; }
+.rise-in-4 { animation-delay: 0.38s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-ken-burns,
+  .animate-marquee,
+  .rise-in { animation: none; }
+}
