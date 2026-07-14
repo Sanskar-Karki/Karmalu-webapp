@@ -15,7 +15,8 @@ import {
 } from "@/lib/currency";
 
 export default function CartView() {
-  const { basePath, label } = useBrand();
+  const { basePath, label, brand } = useBrand();
+  const isFullWidth = brand === "activewear";
   const cart = useCart();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -35,7 +36,7 @@ export default function CartView() {
 
   if (items.length === 0) {
     return (
-      <div className="max-w-2xl mx-auto px-6 py-24 text-center flex flex-col items-center gap-5">
+      <div className={`${isFullWidth ? "w-full" : "max-w-2xl mx-auto"} px-6 py-24 text-center flex flex-col items-center gap-5`}>
         <div className="w-20 h-20 rounded-full bg-[var(--brand-soft)] flex items-center justify-center text-3xl">
           🛍️
         </div>
@@ -53,7 +54,7 @@ export default function CartView() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-12">
+    <div className={`${isFullWidth ? "w-full" : "max-w-5xl mx-auto"} px-6 py-12`}>
       <h1 className="text-3xl sm:text-4xl font-bold text-[var(--color-ink)] mb-8">
         Your Cart
       </h1>

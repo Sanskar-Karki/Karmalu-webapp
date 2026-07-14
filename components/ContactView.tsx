@@ -10,11 +10,12 @@ const field =
   "w-full px-4 py-3 rounded-xl border border-[var(--color-ink)]/15 bg-white text-sm outline-none focus:ring-2 focus:ring-[var(--brand)] transition";
 
 export default function ContactView() {
-  const { label } = useBrand();
+  const { label, brand } = useBrand();
+  const isFullWidth = brand === "activewear";
   const [sent, setSent] = useState(false);
 
   return (
-    <div className="w-full px-6 py-16 grid lg:grid-cols-2 gap-12 items-start">
+    <div className={`w-full ${isFullWidth ? "" : "max-w-7xl mx-auto"} px-6 py-16 grid lg:grid-cols-2 gap-12 items-start`}>
       {/* Left: info */}
       <div className="flex flex-col gap-6">
         <SectionHeader

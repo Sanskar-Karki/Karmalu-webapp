@@ -120,7 +120,7 @@ export default function DecorHome({
       </section>
 
       {/* ── Shop by category ── */}
-      <section className="mx-auto w-full max-w-7xl px-6 py-20 md:py-24">
+      <section className="mx-auto w-full max-w-8xl px-6 py-20 md:py-24">
         <div className="mx-auto mb-12 max-w-3xl text-center md:mb-16">
           <h2 className="text-3xl font-semibold leading-tight text-[var(--color-ink)] md:text-4xl">
             Shop by Category
@@ -172,7 +172,7 @@ export default function DecorHome({
 
       {/* ── Featured edit ── */}
       <section className="border-y border-[var(--decor-border)] bg-[var(--decor-secondary)]/40">
-        <div className="mx-auto w-full max-w-7xl px-6 py-20 md:py-24">
+        <div className="mx-auto w-full max-w-8xl px-6 py-20 md:py-24">
           <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--decor-accent)]">
@@ -199,7 +199,7 @@ export default function DecorHome({
       </section>
 
       {/* ── Values strip ── */}
-      <section className="mx-auto w-full max-w-7xl px-6 py-20 md:py-24">
+      <section className="mx-auto w-full max-w-8xl px-6 py-20 md:py-24">
         <ul className="grid grid-cols-2 gap-6 md:grid-cols-4">
           {[
             { t: "Free shipping", s: "On orders over $150" },

@@ -245,38 +245,6 @@ function OrderConfirmation({
         </a>
       </div>
 
-      {/* Delivery timeline */}
-      <div className="w-full bg-white rounded-2xl border border-[var(--color-ink)]/8 p-6">
-        <div className="flex items-center gap-3 mb-5">
-          <div className="w-10 h-10 rounded-full bg-[var(--brand)]/10 flex items-center justify-center text-[var(--brand)]">
-            <Truck size={20} />
-          </div>
-          <div>
-            <p className="font-bold text-[var(--color-ink)] text-sm">Estimated Delivery</p>
-            <p className="text-xs text-[var(--color-ink-muted)]">5–7 business days</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {["Order Placed", "Processing", "Shipped", "Delivered"].map((step, i) => (
-            <div key={step} className="flex items-center flex-1 last:flex-none">
-              <div className="flex flex-col items-center gap-1 shrink-0">
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                  i === 0 ? "bg-[var(--brand)] text-white" : "bg-[var(--color-ink)]/8 text-[var(--color-ink)]/30"
-                }`}>
-                  {i === 0 ? <Check size={13} /> : i + 1}
-                </div>
-                <span className="text-[9px] text-center font-semibold uppercase tracking-wide text-[var(--color-ink)]/40 w-14 leading-tight">
-                  {step}
-                </span>
-              </div>
-              {i < 3 && (
-                <div className="flex-1 h-0.5 mx-1 mb-5 bg-[var(--color-ink)]/8 rounded-full" />
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
 
       {/* Items recap */}
       <div className="w-full bg-white rounded-2xl border border-[var(--color-ink)]/8 p-6">
@@ -326,6 +294,7 @@ function OrderConfirmation({
 ══════════════════════════════════════════ */
 export default function CheckoutView() {
   const { basePath, brand } = useBrand();
+  const isFullWidth = brand === "activewear";
   const cart = useCart();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -536,7 +505,7 @@ export default function CheckoutView() {
     <div className="min-h-screen bg-[var(--color-cream)]">
       {/* Top breadcrumb */}
       <div className="border-b border-[var(--color-ink)]/8 bg-white/70 backdrop-blur-sm">
-        <div className="max-w-6xl mx-auto px-6 h-12 flex items-center gap-2 text-xs text-[var(--color-ink-muted)]">
+        <div className={`${isFullWidth ? "w-full" : "max-w-6xl mx-auto"} px-6 h-12 flex items-center gap-2 text-xs text-[var(--color-ink-muted)]`}>
           <Link href={basePath} className="hover:text-[var(--brand)] transition-colors font-medium">Shop</Link>
           <span>/</span>
           <Link href={`${basePath}/cart`} className="hover:text-[var(--brand)] transition-colors font-medium">Cart</Link>
@@ -545,7 +514,7 @@ export default function CheckoutView() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+      <div className={`${isFullWidth ? "w-full" : "max-w-6xl mx-auto"} px-4 sm:px-6 py-10`}>
         <div className="grid lg:grid-cols-[1fr_380px] gap-10 items-start">
 
           {/* ── Left: form area ── */}

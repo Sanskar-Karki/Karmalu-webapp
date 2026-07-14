@@ -62,7 +62,7 @@ export default function DecorProductDetail({
 
       {/* ── Breadcrumb ── */}
       <div className="border-b border-[var(--color-ink)]/6 bg-white/70 backdrop-blur-sm">
-        <nav className="w-full px-6 h-11 flex items-center gap-1.5 text-[11px] text-[var(--color-ink-muted)]">
+        <nav className="w-full max-w-7xl mx-auto px-6 h-11 flex items-center gap-1.5 text-[11px] text-[var(--color-ink-muted)]">
           <Link href={basePath} className="hover:text-[var(--brand)] transition-colors">Home</Link>
           <span className="text-[var(--color-ink)]/20">/</span>
           <Link href={`${basePath}/shop`} className="hover:text-[var(--brand)] transition-colors">
@@ -78,7 +78,7 @@ export default function DecorProductDetail({
       </div>
 
       {/* ── Main grid ── */}
-      <div className="w-full px-4 sm:px-6 py-10 sm:py-14">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
         <div className="grid lg:grid-cols-[1fr_400px] xl:grid-cols-[1fr_440px] gap-12 xl:gap-20 items-start">
 
           {/* Gallery */}
@@ -172,7 +172,7 @@ export default function DecorProductDetail({
       {/* ── Complete the room ── */}
       {related.length > 0 && (
         <div className="bg-white border-t border-[var(--color-ink)]/6">
-          <div className="w-full px-4 sm:px-6 py-14">
+          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-14">
             <div className="flex items-end justify-between mb-8">
               <div className="flex flex-col gap-1">
                 <span className="text-[10px] font-extrabold uppercase tracking-[0.25em] text-[var(--brand)]">

@@ -30,11 +30,12 @@ function Chevron({ open }: { open: boolean }) {
 }
 
 export default function FaqView({ items }: { items: FaqItem[] }) {
-  const { basePath } = useBrand();
+  const { basePath, brand } = useBrand();
+  const isFullWidth = brand === "activewear";
   const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-16">
+    <div className={`${isFullWidth ? "w-full" : "max-w-3xl mx-auto"} px-6 py-16`}>
       <SectionHeader
         eyebrow="Help center"
         title="Frequently asked questions"

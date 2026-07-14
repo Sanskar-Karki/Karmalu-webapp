@@ -1,6 +1,9 @@
+"use client";
+
 import ProductImage from "@/components/ProductImage";
 import Button from "@/components/Button";
 import SectionHeader from "@/components/SectionHeader";
+import { useBrand } from "@/store/BrandProvider";
 
 interface AboutContent {
   eyebrow: string;
@@ -14,10 +17,14 @@ interface AboutContent {
 }
 
 export default function AboutView({ content }: { content: AboutContent }) {
+  const { brand } = useBrand();
+  const isFullWidth = brand === "activewear";
+  const wrapCls = isFullWidth ? "" : "max-w-7xl mx-auto";
+
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="w-full px-6 pt-16 pb-10 grid lg:grid-cols-2 gap-10 items-center">
+      <section className={`w-full ${wrapCls} px-6 pt-16 pb-10 grid lg:grid-cols-2 gap-10 items-center`}>
         <div className="flex flex-col gap-5">
           <span className="text-xs font-semibold tracking-[0.3em] uppercase text-[var(--brand)]">
             {content.eyebrow}
@@ -49,7 +56,7 @@ export default function AboutView({ content }: { content: AboutContent }) {
 
       {/* Stats */}
       <section className="bg-white border-y border-[var(--color-ink)]/8">
-        <div className="max-w-5xl mx-auto px-6 py-12 grid grid-cols-3 gap-6 text-center">
+        <div className={`${isFullWidth ? "w-full" : "max-w-5xl mx-auto"} px-6 py-12 grid grid-cols-3 gap-6 text-center`}>
           {content.stats.map((s) => (
             <div key={s.label} className="flex flex-col gap-1">
               <span className="text-3xl sm:text-4xl font-extrabold text-[var(--brand)]">
@@ -64,7 +71,7 @@ export default function AboutView({ content }: { content: AboutContent }) {
       </section>
 
       {/* Story */}
-      <section className="max-w-3xl mx-auto w-full px-6 py-16 flex flex-col gap-6">
+      <section className={`${isFullWidth ? "" : "max-w-3xl mx-auto"} w-full px-6 py-16 flex flex-col gap-6`}>
         <SectionHeader eyebrow="Our story" title="Why we do this" align="center" />
         {content.story.map((p, i) => (
           <p key={i} className="text-[var(--color-ink-muted)] leading-relaxed text-center">
@@ -74,7 +81,7 @@ export default function AboutView({ content }: { content: AboutContent }) {
       </section>
 
       {/* Values */}
-      <section className="w-full px-6 pb-20">
+      <section className={`w-full ${wrapCls} px-6 pb-20`}>
         <div className="grid sm:grid-cols-3 gap-5">
           {content.values.map((v) => (
             <div

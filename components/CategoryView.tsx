@@ -122,7 +122,7 @@ export default function CategoryView({
     <div className="flex flex-col min-h-screen bg-[var(--page-bg)]">
 
       {/* ── Header ── */}
-      <header className="w-full px-4 sm:px-6 pt-8 sm:pt-14 pb-6 sm:pb-10">
+      <header className="w-full max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-14 pb-6 sm:pb-10">
         <Link
           href={basePath}
           className="inline-flex items-center gap-1.5 text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] text-[10px] font-semibold uppercase tracking-[0.2em] transition-colors"
@@ -177,7 +177,7 @@ export default function CategoryView({
 
       {/* ── Mobile/tablet filter + sort bar ── */}
       <div className="lg:hidden sticky top-0 z-30 bg-[var(--page-bg)]/95 backdrop-blur-md border-b border-[var(--color-ink)]/10">
-        <div className="w-full px-4 sm:px-6 pt-4 pb-2 sm:pb-4 flex items-center gap-4">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-2 sm:pb-4 flex items-center gap-4">
 
           {/* Filter links */}
           <nav
@@ -286,7 +286,7 @@ export default function CategoryView({
         </div>
 
         {priceOpen && (
-          <div className="w-full px-4 sm:px-6 pb-4 -mt-1 flex items-center gap-2">
+          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 pb-4 -mt-1 flex items-center gap-2">
             <label htmlFor="price-min-mobile" className="sr-only">Minimum price</label>
             <input
               id="price-min-mobile"
@@ -314,7 +314,7 @@ export default function CategoryView({
         )}
 
         {searchOpen && (
-          <div className="w-full px-4 sm:px-6 pb-4 -mt-1">
+          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 pb-4 -mt-1">
             <label htmlFor="product-search" className="sr-only">Search products</label>
             <input
               id="product-search"
@@ -330,7 +330,7 @@ export default function CategoryView({
       </div>
 
       {/* ── Sidebar + Product grid ── */}
-      <section className="w-full px-4 sm:px-6 py-10 sm:py-14 flex-1 lg:flex lg:gap-12 items-start">
+      <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-14 flex-1 lg:flex lg:gap-12 items-start">
 
         {/* Desktop sidebar */}
         {sidebarOpen && (
@@ -553,7 +553,7 @@ export default function CategoryView({
 
       {/* ── Editorial CTA strip ── */}
       <section className="border-t border-[var(--color-ink)]/10">
-        <div className="w-full px-4 sm:px-6 py-14 sm:py-20 flex flex-col sm:flex-row items-start sm:items-end justify-between gap-6">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-14 sm:py-20 flex flex-col sm:flex-row items-start sm:items-end justify-between gap-6">
           <div>
             <span className="text-[10px] font-semibold tracking-[0.3em] uppercase text-[var(--brand-dark)] block mb-3">
               New Season
