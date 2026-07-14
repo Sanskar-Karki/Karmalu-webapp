@@ -2,36 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useBrand } from "@/store/BrandProvider";
 import { getCategories } from "@/data/catalog";
 import CartIcon from "@/components/CartIcon";
-import { Menu, Close, ArrowRight } from "@/components/icons";
+import { Menu, Close, ArrowRight, Search } from "@/components/icons";
 
-function Chevron({ open }: { open: boolean }) {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-    >
-      <path d="M6 9l6 6 6-6" />
-    </svg>
-  );
-}
 
 export default function BrandNavbar() {
   const { brand, label, basePath } = useBrand();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [shopOpen, setShopOpen] = useState(false);
-  const shopRef = useRef<HTMLLIElement>(null);
+  const [scrolled, setScrolled] = useState(false);
   const categories = getCategories(brand);
 
   const links = [
@@ -43,114 +25,111 @@ export default function BrandNavbar() {
   const isActive = (href: string) =>
     href === basePath ? pathname === basePath : pathname.startsWith(href);
 
-  const shopActive = categories.some((c) =>
-    pathname.startsWith(`${basePath}/${c.slug}`)
-  );
+  const shopActive =
+    pathname.startsWith(`${basePath}/shop`) ||
+    categories.some((c) => pathname.startsWith(`${basePath}/${c.slug}`));
 
-  // Close dropdown on outside click
+  // Shrink + solidify on scroll
   useEffect(() => {
-    if (!shopOpen) return;
-    const onClick = (e: MouseEvent) => {
-      if (shopRef.current && !shopRef.current.contains(e.target as Node)) {
-        setShopOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
-  }, [shopOpen]);
+    const onScroll = () => setScrolled(window.scrollY > 12);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Close everything on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   return (
-    <header className="sticky top-0 z-50 w-full backdrop-blur-md bg-[var(--page-bg)]/90 border-b border-[var(--color-ink)]/8">
-      <nav className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
+    <header
+      className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+        scrolled
+          ? "backdrop-blur-xl bg-[var(--page-bg)]/85 border-b border-[var(--color-ink)]/10 shadow-[0_4px_24px_-12px_rgba(45,42,36,0.25)]"
+          : "backdrop-blur-md bg-[var(--page-bg)]/60 border-b border-transparent"
+      }`}
+    >
+      <nav
+        className={`relative w-full px-4 sm:px-6 flex items-center justify-between gap-4 transition-all duration-300 ${
+          scrolled ? "h-14" : "h-16 sm:h-20"
+        }`}
+      >
         {/* Logo */}
-        <Link href={basePath} className="flex items-center gap-2 shrink-0">
-          <span className="font-display text-lg font-bold tracking-[0.12em] uppercase text-[var(--color-ink)]">
-            KARMALU
+        <Link href={basePath} className="group flex items-center gap-2.5 shrink-0">
+          <span className="relative inline-flex items-center">
+            <span className="font-display text-lg sm:text-xl font-extrabold tracking-[0.14em] uppercase text-[var(--color-ink)]">
+              KARMALU
+            </span>
+            <span className="ml-0.5 w-1.5 h-1.5 rounded-full bg-[var(--brand)] translate-y-1.5 transition-transform duration-300 group-hover:scale-150" />
           </span>
-          <span className="hidden sm:inline text-[10px] font-semibold tracking-widest uppercase text-[var(--brand)] border-l border-[var(--color-ink)]/15 pl-2">
+          <span className="hidden sm:inline text-[10px] font-semibold tracking-[0.2em] uppercase text-[var(--brand)] border-l border-[var(--color-ink)]/15 pl-2.5">
             {label}
           </span>
         </Link>
 
-        {/* Desktop links */}
-        <ul className="hidden lg:flex items-center gap-0.5">
-          {/* Shop dropdown */}
-          <li className="relative" ref={shopRef}>
-            <button
-              onClick={() => setShopOpen((v) => !v)}
-              className={`inline-flex items-center gap-1 px-3 py-2 rounded-full text-sm font-medium transition-all ${
-                shopActive || shopOpen
-                  ? "bg-[var(--brand-soft)] text-[var(--brand)]"
+        {/* Desktop links — centered */}
+        <ul className="hidden lg:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
+          {/* Shop link */}
+          <li>
+            <Link
+              href={`${basePath}/shop`}
+              className={`group relative px-3.5 py-2 text-sm font-medium transition-colors ${
+                shopActive
+                  ? "text-[var(--brand)]"
                   : "text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]"
               }`}
-              aria-expanded={shopOpen}
             >
-              Shop <Chevron open={shopOpen} />
-            </button>
-
-            {/* Mega-menu */}
-            <div
-              className={`absolute left-0 top-full mt-2 w-[360px] rounded-2xl bg-white shadow-[var(--shadow-card-hover)] border border-[var(--color-ink)]/8 p-2 transition-all duration-200 origin-top ${
-                shopOpen
-                  ? "opacity-100 scale-100 pointer-events-auto"
-                  : "opacity-0 scale-95 pointer-events-none"
-              }`}
-            >
-              <div className="grid grid-cols-2 gap-1">
-                {categories.map((c) => (
-                  <Link
-                    key={c.slug}
-                    href={`${basePath}/${c.slug}`}
-                    onClick={() => setShopOpen(false)}
-                    className="flex flex-col gap-0.5 rounded-xl px-3 py-2.5 hover:bg-[var(--brand-soft)] transition group"
-                  >
-                    <span className="text-sm font-semibold text-[var(--color-ink)] group-hover:text-[var(--brand)]">
-                      {c.name}
-                    </span>
-                    <span className="text-[11px] text-[var(--color-ink-muted)] line-clamp-1">
-                      {c.tagline}
-                    </span>
-                  </Link>
-                ))}
-              </div>
-              <Link
-                href={`${basePath}/${categories[0].slug}`}
-                onClick={() => setShopOpen(false)}
-                className="mt-1 flex items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-[var(--brand)] bg-[var(--brand-soft)] hover:brightness-95 transition"
-              >
-                Shop all {label} <ArrowRight size={15} />
-              </Link>
-            </div>
+              Shop
+              <span
+                className={`pointer-events-none absolute left-3.5 right-3.5 -bottom-0.5 h-0.5 rounded-full bg-[var(--brand)] origin-left transition-transform duration-300 ${
+                  shopActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                }`}
+              />
+            </Link>
           </li>
 
           {links.map(({ href, label }) => (
             <li key={href}>
               <Link
                 href={href}
-                className={`px-3 py-2 rounded-full text-sm font-medium transition-all ${
+                className={`group relative px-3.5 py-2 text-sm font-medium transition-colors ${
                   isActive(href)
-                    ? "bg-[var(--brand-soft)] text-[var(--brand)]"
+                    ? "text-[var(--brand)]"
                     : "text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]"
                 }`}
               >
                 {label}
+                <span
+                  className={`pointer-events-none absolute left-3.5 right-3.5 -bottom-0.5 h-0.5 rounded-full bg-[var(--brand)] origin-left transition-transform duration-300 ${
+                    isActive(href) ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                  }`}
+                />
               </Link>
             </li>
           ))}
         </ul>
 
+        {/* Right actions */}
         <div className="flex items-center gap-1 shrink-0">
+          <button
+            aria-label="Search"
+            className="hidden sm:inline-flex items-center justify-center w-10 h-10 rounded-full text-[var(--color-ink-muted)] hover:text-[var(--brand)] hover:bg-[var(--brand-soft)] transition-colors"
+          >
+            <Search size={19} />
+          </button>
           <Link
             href="/"
-            className="hidden md:inline-flex text-xs font-medium text-[var(--color-ink-muted)] hover:text-[var(--brand)] px-3 py-2 transition-colors"
+            className="hidden md:inline-flex items-center gap-1.5 text-xs font-medium text-[var(--color-ink-muted)] hover:text-[var(--brand)] px-3 py-2 rounded-full hover:bg-[var(--brand-soft)] transition-colors"
           >
-            ← All brands
+            <ArrowRight size={14} className="rotate-180" /> All brands
           </Link>
           <CartIcon />
           <button
-            className="lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-full hover:bg-[var(--brand-soft)] transition"
+            className="lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-full hover:bg-[var(--brand-soft)] transition-colors"
             onClick={() => setMobileOpen((v) => !v)}
             aria-label="Toggle menu"
+            aria-expanded={mobileOpen}
           >
             {mobileOpen ? <Close size={20} /> : <Menu size={22} />}
           </button>
@@ -160,15 +139,24 @@ export default function BrandNavbar() {
       {/* Mobile menu */}
       <div
         className={`lg:hidden overflow-hidden transition-all duration-300 ${
-          mobileOpen ? "max-h-[560px] pb-4 border-t border-[var(--color-ink)]/8" : "max-h-0"
+          mobileOpen ? "max-h-[600px] pb-4 border-t border-[var(--color-ink)]/8" : "max-h-0"
         }`}
       >
         <div className="px-4 pt-3 flex flex-col gap-3">
           {/* Shop section */}
           <div>
-            <p className="px-4 text-[11px] font-semibold tracking-widest uppercase text-[var(--color-ink-muted)] mb-1">
-              Shop
-            </p>
+            <div className="flex items-center justify-between px-4 mb-1">
+              <p className="text-[11px] font-semibold tracking-widest uppercase text-[var(--color-ink-muted)]">
+                Shop
+              </p>
+              <Link
+                href={`${basePath}/shop`}
+                onClick={() => setMobileOpen(false)}
+                className="text-[10px] font-bold uppercase tracking-widest text-[var(--brand)]"
+              >
+                All →
+              </Link>
+            </div>
             <ul className="grid grid-cols-2 gap-0.5">
               {categories.map((c) => (
                 <li key={c.slug}>

@@ -1,4 +1,4 @@
-import Image from "next/image";
+import ProductImage from "@/components/ProductImage";
 import Link from "next/link";
 import type { Category } from "@/types";
 import { ArrowRight } from "@/components/icons";
@@ -18,7 +18,8 @@ export default function CategoryCard({
       className="group relative overflow-hidden rounded-[var(--radius-card)] min-h-[260px] flex flex-col justify-end p-6 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[var(--shadow-card-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
     >
       <div className="absolute inset-0 z-0">
-        <Image
+        <ProductImage
+          preset="card"
           src={category.image}
           alt={category.name}
           fill

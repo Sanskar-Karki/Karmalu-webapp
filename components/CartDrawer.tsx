@@ -1,12 +1,18 @@
 "use client";
 
-import Image from "next/image";
+import ProductImage from "@/components/ProductImage";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useBrand, useCart, useCartDrawer } from "@/store/BrandProvider";
 import QtyStepper from "@/components/QtyStepper";
 import Button from "@/components/Button";
 import { Trash, Close } from "@/components/icons";
+import {
+  formatNpr,
+  FREE_SHIPPING_THRESHOLD,
+  amountToFreeShipping,
+  qualifiesForFreeShipping,
+} from "@/lib/currency";
 
 export default function CartDrawer() {
   const { basePath, label } = useBrand();
@@ -36,8 +42,14 @@ export default function CartDrawer() {
 
   const items = mounted ? cart.items : [];
   const subtotal = mounted ? cart.subtotal() : 0;
-  const shipping = subtotal > 150 || subtotal === 0 ? 0 : 9;
-  const total = subtotal + shipping;
+  const freeShipping = subtotal === 0 || qualifiesForFreeShipping(subtotal);
+  const shippingMethod = mounted ? cart.shippingMethod : null;
+  // Shipping is picked at checkout; until then we can't know the real cost.
+  const shippingKnown = Boolean(shippingMethod);
+  const shipping = freeShipping ? 0 : shippingMethod?.cost ?? 0;
+  const total = subtotal + (shippingKnown ? shipping : 0);
+  const remaining = amountToFreeShipping(subtotal);
+  const progressPct = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
 
   return (
     <>
@@ -100,7 +112,7 @@ export default function CartDrawer() {
                     onClick={closeDrawer}
                     className="relative w-20 h-20 rounded-xl overflow-hidden bg-[var(--color-beige)] shrink-0"
                   >
-                    <Image src={item.image} alt={item.name} fill sizes="80px" className="object-cover" />
+                    <ProductImage preset="thumb" src={item.image} alt={item.name} fill sizes="80px" className="object-cover" />
                   </Link>
 
                   <div className="flex flex-1 flex-col min-w-0 gap-1">
@@ -111,7 +123,11 @@ export default function CartDrawer() {
                     >
                       {item.name}
                     </Link>
-                    <p className="text-xs text-[var(--color-ink-muted)]">${item.price}</p>
+                    <p className="text-xs text-[var(--color-ink-muted)]">
+                      {formatNpr(item.price)}
+                      {item.size && <span className="ml-1">· Size {item.size}</span>}
+                      {item.color && <span className="ml-1">· {item.color}</span>}
+                    </p>
                     <div className="mt-auto flex items-center justify-between">
                       <QtyStepper value={item.qty} onChange={(q) => cart.setQty(item.id, q)} />
                       <button
@@ -125,7 +141,7 @@ export default function CartDrawer() {
                   </div>
 
                   <span className="text-sm font-bold text-[var(--color-ink)] shrink-0">
-                    ${(item.price * item.qty).toFixed(0)}
+                    {formatNpr(item.price * item.qty)}
                   </span>
                 </li>
               ))}
@@ -133,24 +149,52 @@ export default function CartDrawer() {
 
             {/* Footer */}
             <div className="border-t border-[var(--color-ink)]/8 px-6 py-5 flex flex-col gap-3 shrink-0">
-              {subtotal < 150 && (
-                <p className="text-xs text-[var(--brand)] bg-[var(--brand-soft)] rounded-lg px-3 py-2 text-center">
-                  Add ${(150 - subtotal).toFixed(2)} more for free shipping.
+              {/* Free-shipping progress */}
+              <div className="flex flex-col gap-2 rounded-lg bg-[var(--brand-soft)] px-3 py-2.5">
+                <p className="text-xs text-[var(--color-ink)] text-center">
+                  {remaining > 0 ? (
+                    <>
+                      You&apos;re <span className="font-bold text-[var(--brand)]">{formatNpr(remaining)}</span> away from{" "}
+                      <span className="font-semibold">free shipping</span>.
+                    </>
+                  ) : (
+                    <span className="font-semibold text-[var(--brand)]">
+                      🎉 You&apos;ve unlocked free shipping!
+                    </span>
+                  )}
                 </p>
-              )}
+                <div
+                  className="h-2 w-full overflow-hidden rounded-full bg-[var(--color-ink)]/10"
+                  role="progressbar"
+                  aria-valuemin={0}
+                  aria-valuemax={FREE_SHIPPING_THRESHOLD}
+                  aria-valuenow={Math.min(subtotal, FREE_SHIPPING_THRESHOLD)}
+                  aria-label="Progress toward free shipping"
+                >
+                  <div
+                    className="h-full rounded-full bg-[var(--brand)] transition-[width] duration-500 ease-out"
+                    style={{ width: `${progressPct}%` }}
+                  />
+                </div>
+              </div>
+
               <div className="flex justify-between text-sm">
                 <span className="text-[var(--color-ink-muted)]">Subtotal</span>
-                <span className="font-semibold">${subtotal.toFixed(2)}</span>
+                <span className="font-semibold">{formatNpr(subtotal)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-[var(--color-ink-muted)]">Shipping</span>
-                <span className="font-semibold">
-                  {shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}
+                <span className={`font-semibold ${!shippingKnown ? "text-[var(--color-ink-muted)] italic" : ""}`}>
+                  {!shippingKnown
+                    ? "Calculated at next step"
+                    : shipping === 0
+                    ? "Free"
+                    : formatNpr(shipping)}
                 </span>
               </div>
               <div className="flex justify-between text-base font-bold border-t border-[var(--color-ink)]/8 pt-3">
                 <span>Total</span>
-                <span>${total.toFixed(2)}</span>
+                <span>{formatNpr(total)}</span>
               </div>
 
               <Button href={`${basePath}/checkout`} size="lg" fullWidth onClick={closeDrawer}>

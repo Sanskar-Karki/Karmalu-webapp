@@ -1,11 +1,12 @@
 "use client";
 
-import Image from "next/image";
+import ProductImage from "@/components/ProductImage";
 import Link from "next/link";
 import { useState } from "react";
 import type { Product } from "@/types";
 import { useBrand, useCart, useCartDrawer } from "@/store/BrandProvider";
 import { Plus, Check, Star } from "@/components/icons";
+import { formatNpr } from "@/lib/currency";
 
 export default function ActivewearProductCard({
   product,
@@ -21,7 +22,7 @@ export default function ActivewearProductCard({
   const [hovered, setHovered] = useState(false);
 
   const href = `${basePath}/product/${product.slug}`;
-  const hasLifestyle = product.images.length > 1;
+  const hasLifestyle = Boolean(product.hoverImage);
 
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -41,11 +42,12 @@ export default function ActivewearProductCard({
       }`}
     >
       {/* Base product image */}
-      <Image
-        src={product.images[0]}
+      <ProductImage
+        preset="card"
+        src={product.image}
         alt={product.name}
         fill
-        sizes={featured ? "(max-width: 640px) 100vw, 66vw" : "(max-width: 640px) 50vw, 33vw"}
+        sizes={featured ? "(max-width: 640px) 100vw, 66vw" : undefined}
         className={`object-cover transition-all duration-700 ease-in-out ${
           hovered && hasLifestyle ? "opacity-0 scale-105" : "opacity-100 scale-100"
         }`}
@@ -53,11 +55,12 @@ export default function ActivewearProductCard({
 
       {/* Lifestyle / model hover image */}
       {hasLifestyle && (
-        <Image
-          src={product.images[1]}
+        <ProductImage
+          preset="card"
+          src={product.hoverImage!}
           alt={`${product.name} lifestyle`}
           fill
-          sizes={featured ? "(max-width: 640px) 100vw, 66vw" : "(max-width: 640px) 50vw, 33vw"}
+          sizes={featured ? "(max-width: 640px) 100vw, 66vw" : undefined}
           className={`object-cover transition-all duration-700 ease-in-out absolute inset-0 ${
             hovered ? "opacity-100 scale-100" : "opacity-0 scale-105"
           }`}
@@ -86,7 +89,7 @@ export default function ActivewearProductCard({
       <button
         onClick={handleAdd}
         aria-label={`Add ${product.name} to cart`}
-        className={`absolute top-3 right-3 z-10 w-10 h-10 rounded-full bg-white text-[var(--aw-ink)] flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110 active:scale-95 ${
+        className={`absolute top-3 right-3 z-10 w-10 h-10 rounded-full bg-white text-[var(--aw-ink)] flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer ${
           hovered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
         }`}
       >
@@ -108,10 +111,10 @@ export default function ActivewearProductCard({
         </h3>
         <div className="flex items-center gap-2 mt-0.5">
           <span className={`font-extrabold ${featured ? "text-xl" : "text-base"}`}>
-            ${product.price}
+            {formatNpr(product.price)}
           </span>
           {product.oldPrice && (
-            <span className="text-sm text-white/50 line-through">${product.oldPrice}</span>
+            <span className="text-sm text-white/50 line-through">{formatNpr(product.oldPrice)}</span>
           )}
         </div>
 

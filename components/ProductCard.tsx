@@ -1,11 +1,12 @@
 "use client";
 
-import Image from "next/image";
+import ProductImage from "@/components/ProductImage";
 import Link from "next/link";
 import type { Product } from "@/types";
 import Badge from "@/components/Badge";
 import { Star, Plus, Check } from "@/components/icons";
 import { useBrand, useCart, useCartDrawer } from "@/store/BrandProvider";
+import { formatNpr } from "@/lib/currency";
 import { useState } from "react";
 
 export default function ProductCard({ product }: { product: Product }) {
@@ -30,8 +31,9 @@ export default function ProductCard({ product }: { product: Product }) {
       className="group flex flex-col bg-white rounded-[var(--radius-card)] shadow-[var(--shadow-card)] overflow-hidden transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[var(--shadow-card-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
     >
       <div className="relative w-full aspect-[4/3] overflow-hidden bg-[var(--color-beige)]">
-        <Image
-          src={product.images[0]}
+        <ProductImage
+          preset="card"
+          src={product.image}
           alt={product.name}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
@@ -75,11 +77,11 @@ export default function ProductCard({ product }: { product: Product }) {
 
         <div className="flex items-center gap-2 pt-2">
           <span className="text-lg font-bold text-[var(--color-ink)]">
-            ${product.price}
+            {formatNpr(product.price)}
           </span>
           {product.oldPrice && (
             <span className="text-sm text-[var(--color-ink-muted)] line-through">
-              ${product.oldPrice}
+              {formatNpr(product.oldPrice)}
             </span>
           )}
         </div>

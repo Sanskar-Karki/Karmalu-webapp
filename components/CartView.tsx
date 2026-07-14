@@ -1,12 +1,18 @@
 "use client";
 
-import Image from "next/image";
+import ProductImage from "@/components/ProductImage";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useBrand, useCart } from "@/store/BrandProvider";
 import QtyStepper from "@/components/QtyStepper";
 import Button from "@/components/Button";
 import { Trash, ArrowLeft } from "@/components/icons";
+import {
+  formatNpr,
+  FREE_SHIPPING_THRESHOLD,
+  amountToFreeShipping,
+  qualifiesForFreeShipping,
+} from "@/lib/currency";
 
 export default function CartView() {
   const { basePath, label } = useBrand();
@@ -20,8 +26,12 @@ export default function CartView() {
 
   const items = cart.items;
   const subtotal = cart.subtotal();
-  const shipping = subtotal > 150 || subtotal === 0 ? 0 : 9;
-  const total = subtotal + shipping;
+  const freeShipping = subtotal === 0 || qualifiesForFreeShipping(subtotal);
+  const shippingKnown = Boolean(cart.shippingMethod);
+  const shipping = freeShipping ? 0 : cart.shippingMethod?.cost ?? 0;
+  const total = subtotal + (shippingKnown ? shipping : 0);
+  const remaining = amountToFreeShipping(subtotal);
+  const progressPct = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
 
   if (items.length === 0) {
     return (
@@ -43,7 +53,7 @@ export default function CartView() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-12">
+    <div className="max-w-5xl mx-auto px-6 py-12">
       <h1 className="text-3xl sm:text-4xl font-bold text-[var(--color-ink)] mb-8">
         Your Cart
       </h1>
@@ -57,7 +67,8 @@ export default function CartView() {
                 href={`${basePath}/product/${item.slug}`}
                 className="relative w-24 h-24 rounded-xl overflow-hidden bg-[var(--color-beige)] shrink-0"
               >
-                <Image
+                <ProductImage
+                  preset="thumb"
                   src={item.image}
                   alt={item.name}
                   fill
@@ -77,7 +88,13 @@ export default function CartView() {
                   {item.name}
                 </Link>
                 <p className="text-sm font-bold text-[var(--color-ink)] mt-auto">
-                  ${item.price}
+                  {formatNpr(item.price)}
+                  {(item.size || item.color) && (
+                    <span className="ml-1.5 text-xs font-normal text-[var(--color-ink-muted)]">
+                      {item.size && `· Size ${item.size}`}
+                      {item.color && ` · ${item.color}`}
+                    </span>
+                  )}
                 </p>
               </div>
 
@@ -102,27 +119,58 @@ export default function CartView() {
         <aside className="bg-white rounded-[var(--radius-card)] shadow-[var(--shadow-card)] p-6 flex flex-col gap-4 lg:sticky lg:top-24">
           <h2 className="text-lg font-bold text-[var(--color-ink)]">Order summary</h2>
 
+          {/* Free-shipping progress */}
+          <div className="flex flex-col gap-2 rounded-lg bg-[var(--brand-soft)] px-3 py-2.5">
+            <p className="text-xs text-[var(--color-ink)]">
+              {remaining > 0 ? (
+                <>
+                  You&apos;re{" "}
+                  <span className="font-bold text-[var(--brand)]">
+                    {formatNpr(remaining)}
+                  </span>{" "}
+                  away from <span className="font-semibold">free shipping</span>.
+                </>
+              ) : (
+                <span className="font-semibold text-[var(--brand)]">
+                  🎉 You&apos;ve unlocked free shipping!
+                </span>
+              )}
+            </p>
+            <div
+              className="h-2 w-full overflow-hidden rounded-full bg-[var(--color-ink)]/10"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={FREE_SHIPPING_THRESHOLD}
+              aria-valuenow={Math.min(subtotal, FREE_SHIPPING_THRESHOLD)}
+              aria-label="Progress toward free shipping"
+            >
+              <div
+                className="h-full rounded-full bg-[var(--brand)] transition-[width] duration-500 ease-out"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+          </div>
+
           <div className="flex flex-col gap-2 text-sm">
             <div className="flex justify-between">
               <span className="text-[var(--color-ink-muted)]">Subtotal</span>
-              <span className="font-semibold">${subtotal.toFixed(2)}</span>
+              <span className="font-semibold">{formatNpr(subtotal)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--color-ink-muted)]">Shipping</span>
-              <span className="font-semibold">
-                {shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}
+              <span className={`font-semibold ${!shippingKnown ? "text-[var(--color-ink-muted)] italic" : ""}`}>
+                {!shippingKnown
+                  ? "Calculated at next step"
+                  : shipping === 0
+                  ? "Free"
+                  : formatNpr(shipping)}
               </span>
             </div>
-            {subtotal < 150 && subtotal > 0 && (
-              <p className="text-xs text-[var(--brand)] bg-[var(--brand-soft)] rounded-lg px-3 py-2 mt-1">
-                Add ${(150 - subtotal).toFixed(2)} more for free shipping.
-              </p>
-            )}
           </div>
 
           <div className="border-t border-[var(--color-ink)]/8 pt-3 flex justify-between text-base font-bold">
             <span>Total</span>
-            <span>${total.toFixed(2)}</span>
+            <span>{formatNpr(total)}</span>
           </div>
 
           <Button href={`${basePath}/checkout`} size="lg" fullWidth>

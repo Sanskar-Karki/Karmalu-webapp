@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getProduct, getProducts } from "@/data/catalog";
-import ProductDetail from "@/components/ProductDetail";
+import DecorProductDetail from "@/components/DecorProductDetail";
 
 export function generateStaticParams() {
   return getProducts("decor").map((p) => ({ slug: p.slug }));
@@ -28,6 +28,6 @@ export default async function DecorProductPage({
   if (!product) notFound();
 
   return (
-    <ProductDetail product={product} basePath="/living-decor" brand="decor" />
+    <DecorProductDetail product={product} basePath="/living-decor" brand="decor" />
   );
 }

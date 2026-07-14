@@ -14,7 +14,7 @@ export default function ContactView() {
   const [sent, setSent] = useState(false);
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-16 grid lg:grid-cols-2 gap-12 items-start">
+    <div className="w-full px-6 py-16 grid lg:grid-cols-2 gap-12 items-start">
       {/* Left: info */}
       <div className="flex flex-col gap-6">
         <SectionHeader

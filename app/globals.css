@@ -16,14 +16,35 @@
   --color-gold-dark: #a8842f;
   --color-gold-light: #ddc07e;
 
+  /* Dark surfaces — premium gallery / category pages */
+  --color-dark: #0e0b09;
+  --color-dark-surface: #1c1814;
+  --color-dark-charcoal: #1a1714;
+  --color-dark-muted: rgba(255,255,255,0.35);
+
   --font-display: var(--font-plus-jakarta);
   --font-body: var(--font-inter);
+  --font-serif: var(--font-playfair);
+  --font-sport: var(--font-space-grotesk);
 
   --radius-card: 1.25rem;
   --radius-btn: 9999px;
 
   --shadow-card: 0 4px 24px 0 rgba(45,42,36,0.08);
   --shadow-card-hover: 0 12px 40px 0 rgba(45,42,36,0.16);
+
+  /* Landing page — "two worlds" portals */
+  --color-noir: #080605;
+  --color-world-decor: var(--color-gold);
+  --color-world-decor-soft: rgba(201,162,75,0.15);
+  --color-world-activewear: #810100;
+  --color-world-activewear-soft: rgba(129,1,0,0.18);
+}
+
+@layer utilities {
+  .world-overlay {
+    background: linear-gradient(to top, rgba(8,6,5,0.95) 0%, rgba(8,6,5,0.45) 50%, rgba(8,6,5,0.15) 100%);
+  }
 }
 
 *, *::before, *::after {
@@ -52,26 +73,74 @@ body {
 
 /* ── Brand themes (set on a wrapper element) ── */
 .theme-decor {
-  --brand: var(--color-gold);
-  --brand-dark: var(--color-gold-dark);
-  --brand-light: var(--color-gold-light);
-  --brand-soft: rgba(201, 162, 75, 0.12);
+  /* Reference design language: warm terracotta primary, teal accent,
+     sage neutrals on a warm off-white ground (mirrors Karmalu-web-main). */
+  --brand: #a85f3d;          /* terracotta */
+  --brand-dark: #8a4d31;
+  --brand-light: #c98462;
+  --brand-soft: rgba(168, 95, 61, 0.10);
   --brand-contrast: #ffffff;
-  --page-bg: var(--color-cream);
+  --page-bg: #fbfaf7;        /* warm off-white */
+
+  /* Secondary teal accent for eyebrows, links & sparing pops */
+  --decor-accent: #2f6f73;
+  --decor-accent-soft: rgba(47, 111, 115, 0.10);
+  --decor-secondary: #eef3ef; /* sage-tinted card / alt sections */
+  --decor-border: #dce4dd;
+
+  /* Calmer, cooler ink to match the reference's foreground/muted tones */
+  --color-ink: #1f2723;
+  --color-ink-muted: #61706a;
+  --color-surface: #ffffff;
+}
+
+/* Reference serif display headings for Living & Decor only */
+.theme-decor h1,
+.theme-decor h2,
+.theme-decor h3,
+.theme-decor h4,
+.theme-decor h5,
+.theme-decor h6 {
+  font-family: var(--font-serif), var(--font-display), Georgia, serif;
+  letter-spacing: 0;
+}
+
+/* Smooth, editorial interaction feel (mirrors reference base layer) */
+.theme-decor a,
+.theme-decor button {
+  transition: color 0.3s ease, background-color 0.3s ease,
+    border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .theme-activewear {
-  --brand: #FEA1A1;
-  --brand-dark: #e07070;
-  --brand-light: #ffc4c4;
-  --brand-soft: rgba(254, 161, 161, 0.15);
-  --brand-contrast: #1A1A1A;
-  --page-bg: #F9FBE7;
-  --aw-bg: #F9FBE7;
-  --aw-secondary: #F0EDD4;
-  --aw-accent: #ECCDB4;
-  --aw-highlight: #FEA1A1;
-  --aw-ink: #1A1A1A;
+  /* Cherry red + black on white — editorial, high-contrast palette */
+  --brand: #9E2A2B;
+  --brand-dark: #7a1f20;
+  --brand-light: #c44647;
+  --brand-soft: rgba(158, 42, 43, 0.08);
+  --brand-contrast: #ffffff;
+  --page-bg: #ffffff;
+
+  --aw-bg: #ffffff;        /* White — main background            */
+  --aw-secondary: #f7f4f2; /* Soft off-white — cards, alt sections */
+  --aw-accent: #14100f;    /* Near-black — dark surfaces          */
+  --aw-highlight: #9E2A2B; /* Cherry red — primary CTAs & accents */
+  --aw-accent-warm: #3a3230; /* Charcoal — secondary accent       */
+  --aw-cherry: #9E2A2B;    /* Cherry red — sale/sparing pop       */
+  --aw-maroon: #7a1f20;    /* Cherry dark — hover state           */
+  --aw-ink: #14100f;       /* Near-black — body text              */
+  --aw-ink-muted: rgba(20,16,15,0.55);
+}
+
+/* Clean geometric display headings for Activewear only */
+.theme-activewear h1,
+.theme-activewear h2,
+.theme-activewear h3,
+.theme-activewear h4,
+.theme-activewear h5,
+.theme-activewear h6,
+.theme-activewear .font-display {
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -109,6 +178,40 @@ h1, h2, h3, h4, h5, h6 {
   will-change: transform;
 }
 
+/* ── Testimonial marquee rows (left + right) ── */
+@keyframes marquee-left {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@keyframes marquee-right {
+  from { transform: translateX(-50%); }
+  to   { transform: translateX(0); }
+}
+.marquee-track-left {
+  animation: marquee-left 40s linear infinite;
+  will-change: transform;
+}
+.marquee-track-right {
+  animation: marquee-right 40s linear infinite;
+  will-change: transform;
+}
+/* Pause both rows when hovering the section */
+.marquee-pause:hover .marquee-track-left,
+.marquee-pause:hover .marquee-track-right {
+  animation-play-state: paused;
+}
+
+/* ── Activewear hero ── */
+@keyframes aw-hero-progress {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+@keyframes aw-hero-fade {
+  from { opacity: 0; transform: scale(1.04); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.aw-hero-fade { animation: aw-hero-fade 0.7s ease-out both; }
+
 @keyframes rise-in {
   from { opacity: 0; transform: translateY(28px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -119,8 +222,18 @@ h1, h2, h3, h4, h5, h6 {
 .rise-in-3 { animation-delay: 0.28s; }
 .rise-in-4 { animation-delay: 0.38s; }
 
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.4); }
+}
+.animate-pulse-soft { animation: pulse-soft 2.4s ease-in-out infinite; }
+
 @media (prefers-reduced-motion: reduce) {
   .animate-ken-burns,
   .animate-marquee,
+  .marquee-track-left,
+  .marquee-track-right,
+  .aw-hero-fade,
+  .animate-pulse-soft,
   .rise-in { animation: none; }
 }

@@ -1,4 +1,4 @@
-import Image from "next/image";
+import ProductImage from "@/components/ProductImage";
 import Button from "@/components/Button";
 import SectionHeader from "@/components/SectionHeader";
 
@@ -17,7 +17,7 @@ export default function AboutView({ content }: { content: AboutContent }) {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="max-w-7xl mx-auto w-full px-6 pt-16 pb-10 grid lg:grid-cols-2 gap-10 items-center">
+      <section className="w-full px-6 pt-16 pb-10 grid lg:grid-cols-2 gap-10 items-center">
         <div className="flex flex-col gap-5">
           <span className="text-xs font-semibold tracking-[0.3em] uppercase text-[var(--brand)]">
             {content.eyebrow}
@@ -35,7 +35,8 @@ export default function AboutView({ content }: { content: AboutContent }) {
           </div>
         </div>
         <div className="relative aspect-[4/3] rounded-[var(--radius-card)] overflow-hidden bg-[var(--color-beige)]">
-          <Image
+          <ProductImage
+            preset="card"
             src={content.image}
             alt={content.title}
             fill
@@ -73,7 +74,7 @@ export default function AboutView({ content }: { content: AboutContent }) {
       </section>
 
       {/* Values */}
-      <section className="max-w-7xl mx-auto w-full px-6 pb-20">
+      <section className="w-full px-6 pb-20">
         <div className="grid sm:grid-cols-3 gap-5">
           {content.values.map((v) => (
             <div

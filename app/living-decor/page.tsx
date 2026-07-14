@@ -1,17 +1,26 @@
-import BrandHome from "@/components/BrandHome";
+import DecorHome from "@/components/DecorHome";
 
 export default function LivingDecorHome() {
   return (
-    <BrandHome
+    <DecorHome
       brand="decor"
       basePath="/living-decor"
       hero={{
-        eyebrow: "KARMALU · Collection 01",
-        title: "Warm pieces for the spaces you love",
+        eyebrow: "Curated home essentials",
+        title: "Modern pieces for a calmer, warmer home.",
         subtitle:
-          "Thoughtfully crafted rugs, lamps, vases and more — organic textures and golden warmth that turn a house into a home.",
+          "Shop rugs, lamps, vases and textiles selected for honest materials, sculptural shapes, and rooms that feel lived in.",
         image:
-          "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=1600&q=80",
+          "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=1600&q=85",
+        highlights: [
+          "Natural materials",
+          "Quiet luxury",
+          "Made for daily living",
+        ],
+        overlayEyebrow: "This season",
+        overlayTitle: "Layered neutrals, warm textures.",
+        overlayText:
+          "Explore a refined edit of rugs, woven textures, and sculptural accents.",
       }}
     />
   );
