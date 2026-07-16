@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import BrandShell from "@/components/BrandShell";
+import WorldEntrance from "@/components/WorldEntrance";
 
 export const metadata: Metadata = {
   title: {
@@ -17,7 +18,7 @@ export default function ActivewearLayout({
 }) {
   return (
     <BrandShell brand="activewear" themeClass="theme-activewear">
-      {children}
+      <WorldEntrance>{children}</WorldEntrance>
     </BrandShell>
   );
 }

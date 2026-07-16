@@ -22,15 +22,11 @@ export const menProducts: Product[] = [
       { hex: "#810100", label: "Cherry" },
       { hex: "#EDEBDE", label: "Cotton" },
     ],
-    image:
-      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=900&h=1125&fit=crop&q=80",
-    hoverImage:
-      "https://images.unsplash.com/photo-1567013127542-490d757e51fc?w=900&h=1125&fit=crop&q=80",
+    image: "/images/activewear/men/essential-training-tee/main.jpg",
+    hoverImage: "/images/activewear/men/essential-training-tee/hover.webp",
     gallery: [
-      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=900&h=1125&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1567013127542-490d757e51fc?w=900&h=1125&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1622445275576-721325763afe?w=900&h=1125&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1556817411-31ae72fa3ea0?w=900&h=1125&fit=crop&q=80",
+      "/images/activewear/men/essential-training-tee/main.jpg",
+      "/images/activewear/men/essential-training-tee/hover.webp",
     ],
     description:
       "A four-way stretch training tee that moves with every rep. Sweat-wicking, breathable, and cut for a modern athletic fit.",

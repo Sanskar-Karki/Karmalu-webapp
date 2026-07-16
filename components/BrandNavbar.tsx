@@ -46,8 +46,8 @@ export default function BrandNavbar() {
     <header
       className={`sticky top-0 z-50 w-full transition-all duration-300 ${
         scrolled
-          ? "backdrop-blur-xl bg-[var(--page-bg)]/85 border-b border-[var(--color-ink)]/10 shadow-[0_4px_24px_-12px_rgba(45,42,36,0.25)]"
-          : "backdrop-blur-md bg-[var(--page-bg)]/60 border-b border-transparent"
+          ? "backdrop-blur-xs bg-[var(--page-bg)]/85 border-b border-[var(--color-ink)]/10 shadow-[0_4px_24px_-12px_rgba(45,42,36,0.25)]"
+          : "backdrop-blur-xs bg-[var(--page-bg)]/60 border-b border-transparent"
       }`}
     >
       <nav

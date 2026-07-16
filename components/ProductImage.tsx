@@ -56,6 +56,7 @@ export default function ProductImage({
   ...rest
 }: ProductImageProps) {
   const [loaded, setLoaded] = useState(false);
+  const isLocal = typeof rest.src === "string" && rest.src.startsWith("/images/");
 
   return (
     <>
@@ -68,6 +69,7 @@ export default function ProductImage({
       <Image
         {...rest}
         alt={alt}
+        unoptimized={isLocal}
         quality={quality ?? PRESET_QUALITY[preset]}
         sizes={sizes ?? PRESET_SIZES[preset]}
         loading={rest.priority ? undefined : "lazy"}

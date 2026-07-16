@@ -73,13 +73,13 @@ body {
 
 /* ── Brand themes (set on a wrapper element) ── */
 .theme-decor {
-  /* Reference design language: warm terracotta primary, teal accent,
+  /* Reference design language: warm champagne-gold primary, teal accent,
      sage neutrals on a warm off-white ground (mirrors Karmalu-web-main). */
-  --brand: #a85f3d;          /* terracotta */
-  --brand-dark: #8a4d31;
-  --brand-light: #c98462;
-  --brand-soft: rgba(168, 95, 61, 0.10);
-  --brand-contrast: #ffffff;
+  --brand: #E5CB90;          /* champagne gold */
+  --brand-dark: #c9a969;
+  --brand-light: #efdcae;
+  --brand-soft: rgba(229, 203, 144, 0.15);
+  --brand-contrast: #2D2A24;
   --page-bg: #fbfaf7;        /* warm off-white */
 
   /* Secondary teal accent for eyebrows, links & sparing pops */
@@ -228,6 +228,18 @@ h1, h2, h3, h4, h5, h6 {
 }
 .animate-pulse-soft { animation: pulse-soft 2.4s ease-in-out infinite; }
 
+@keyframes ping-slow {
+  0% { transform: scale(1); opacity: 0.9; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+.animate-ping-slow { animation: ping-slow 1.4s cubic-bezier(0, 0, 0.2, 1) infinite; }
+
+@keyframes world-fade-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.99); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-world-fade-in { animation: world-fade-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
 @media (prefers-reduced-motion: reduce) {
   .animate-ken-burns,
   .animate-marquee,
@@ -235,5 +247,7 @@ h1, h2, h3, h4, h5, h6 {
   .marquee-track-right,
   .aw-hero-fade,
   .animate-pulse-soft,
+  .animate-ping-slow,
+  .animate-world-fade-in,
   .rise-in { animation: none; }
 }

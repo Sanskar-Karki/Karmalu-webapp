@@ -4,9 +4,9 @@
  */
 
 export const IMAGE_QUALITY = {
-  card: 80,
-  detail: 90,
-  banner: 90,
+  card: 100,
+  detail: 100,
+  banner: 100,
 } as const;
 
 /** Product/category card in a grid — roughly 300px mobile, 500px tablet, 700px desktop. */
