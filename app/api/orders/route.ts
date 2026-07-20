@@ -67,6 +67,8 @@ export async function POST(req: Request) {
         name: i.name,
         quantity: i.quantity,
         price: i.price,
+        size: isNonEmpty(i.size) ? i.size : undefined,
+        color: isNonEmpty(i.color) ? i.color : undefined,
       })),
       subtotal: body.subtotal ?? 0,
       deliveryCharge: body.deliveryCharge ?? 0,

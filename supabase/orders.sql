@@ -49,6 +49,10 @@ declare
 begin
   prefix := 'KRM-' || to_char(now(), 'YYYYMMDD') || '-';
 
+  -- Serialize concurrent order creation for the same day so two simultaneous
+  -- checkouts can't count the same rows and collide on the generated id.
+  perform pg_advisory_xact_lock(hashtext(prefix));
+
   select count(*) into seq
   from public.orders
   where order_id like prefix || '%';
