@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useState, useMemo } from "react";
 import type { Brand, Category } from "@/types";
-import { getCategories, getProducts } from "@/data/catalog";
+import { useCatalog } from "@/store/CatalogProvider";
+import { isOnSale } from "@/lib/pricing";
 import DecorShopCard from "@/components/DecorShopCard";
 import {
   ArrowRight,
@@ -43,6 +44,7 @@ export default function CategoryView({
   category: Category;
   defaultFilter?: string;
 }) {
+  const { getProducts, getCategories } = useCatalog();
   const allProducts = getProducts(brand);
   const allCategories = getCategories(brand);
 
@@ -63,14 +65,14 @@ export default function CategoryView({
     allCategories.forEach((c) => {
       m[c.slug] = allProducts.filter((p) => p.categorySlug === c.slug).length;
     });
-    m.sale = allProducts.filter((p) => (p.oldPrice ?? 0) > 0).length;
+    m.sale = allProducts.filter(isOnSale).length;
     m.new = allProducts.filter((p) => p.badge === "New").length;
     return m;
   }, [allProducts, allCategories]);
 
   const filtered = useMemo(() => {
     let list = allProducts;
-    if (activeFilter === "sale") list = list.filter((p) => (p.oldPrice ?? 0) > 0);
+    if (activeFilter === "sale") list = list.filter(isOnSale);
     else if (activeFilter === "new") list = list.filter((p) => p.badge === "New");
     else if (activeFilter !== "all") list = list.filter((p) => p.categorySlug === activeFilter);
 

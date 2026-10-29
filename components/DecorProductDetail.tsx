@@ -1,5 +1,5 @@
 import type { Brand, Product } from "@/types";
-import { getRelated } from "@/data/catalog";
+import { getCatalog } from "@/lib/catalog-server";
 import ProductImage from "@/components/ProductImage";
 import Link from "next/link";
 import ProductGallery from "@/components/ProductGallery";
@@ -7,6 +7,7 @@ import DecorProductActions from "@/components/DecorProductActions";
 import DecorProductTabs from "@/components/DecorProductTabs";
 import { Star, ArrowRight } from "@/components/icons";
 import { formatNpr } from "@/lib/currency";
+import { productDiscount } from "@/lib/pricing";
 
 function CompleteTheRoomCard({
   product,
@@ -43,7 +44,7 @@ function CompleteTheRoomCard({
   );
 }
 
-export default function DecorProductDetail({
+export default async function DecorProductDetail({
   product,
   basePath,
   brand,
@@ -52,10 +53,9 @@ export default function DecorProductDetail({
   basePath: string;
   brand: Brand;
 }) {
+  const { getRelated } = await getCatalog();
   const related = getRelated(brand, product);
-  const discount = product.oldPrice
-    ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
-    : 0;
+  const discount = productDiscount(product);
 
   return (
     <div className="bg-[var(--page-bg)] min-h-screen">
@@ -129,10 +129,10 @@ export default function DecorProductDetail({
               <span className="text-3xl font-extrabold text-[var(--color-ink)]">
                 {formatNpr(product.price)}
               </span>
-              {product.oldPrice && (
+              {productDiscount(product) > 0 && (
                 <>
                   <span className="text-base text-[var(--color-ink-muted)] line-through">
-                    {formatNpr(product.oldPrice)}
+                    {formatNpr(product.oldPrice!)}
                   </span>
                   <span className="text-sm font-extrabold text-[var(--brand)]">
                     {discount}% off

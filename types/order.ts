@@ -1,14 +1,17 @@
 import type { Brand } from "@/types";
 
 export type OrderStatus =
-  | "Awaiting WhatsApp Confirmation"
+  | "Pending WhatsApp"
+  | "Contacted"
   | "Confirmed"
-  | "Processing"
-  | "Shipped"
+  | "Packing"
+  | "Dispatched"
   | "Delivered"
-  | "Cancelled";
+  | "Cancelled"
+  | "Expired";
 
 export interface OrderItem {
+  productSlug: string;
   name: string;
   quantity: number;
   price: number; // unit price
@@ -17,10 +20,11 @@ export interface OrderItem {
 }
 
 export interface OrderAddress {
+  province: string;
+  district: string;
+  municipality: string;
+  ward: string;
   street: string;
-  city: string;
-  state: string;
-  zip: string;
   country: string;
 }
 

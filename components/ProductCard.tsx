@@ -7,6 +7,7 @@ import Badge from "@/components/Badge";
 import { Star, Plus, Check } from "@/components/icons";
 import { useBrand, useCart, useCartDrawer } from "@/store/BrandProvider";
 import { formatNpr } from "@/lib/currency";
+import { productDiscount } from "@/lib/pricing";
 import { useState } from "react";
 
 export default function ProductCard({ product }: { product: Product }) {
@@ -44,7 +45,7 @@ export default function ProductCard({ product }: { product: Product }) {
             <Badge variant="solid">{product.badge}</Badge>
           </span>
         )}
-        {product.oldPrice && (
+        {productDiscount(product) > 0 && (
           <span className="absolute top-3 right-3 bg-[var(--color-ink)] text-white text-xs font-bold px-2 py-0.5 rounded-full">
             Sale
           </span>
@@ -79,9 +80,9 @@ export default function ProductCard({ product }: { product: Product }) {
           <span className="text-lg font-bold text-[var(--color-ink)]">
             {formatNpr(product.price)}
           </span>
-          {product.oldPrice && (
+          {productDiscount(product) > 0 && (
             <span className="text-sm text-[var(--color-ink-muted)] line-through">
-              {formatNpr(product.oldPrice)}
+              {formatNpr(product.oldPrice!)}
             </span>
           )}
         </div>

@@ -13,7 +13,7 @@ export function formatNpr(amount: number): string {
 }
 
 /** Order subtotal that unlocks free shipping (NPR). */
-export const FREE_SHIPPING_THRESHOLD = 5000;
+export const FREE_SHIPPING_THRESHOLD = 3500;
 
 /** How much more the customer must spend to earn free shipping (>= 0). */
 export function amountToFreeShipping(subtotal: number): number {

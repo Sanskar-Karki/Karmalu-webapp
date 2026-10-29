@@ -4,19 +4,19 @@ import type { FaqItem } from "@/components/FaqView";
 const shared: FaqItem[] = [
   {
     q: "How long does shipping take?",
-    a: "Standard shipping takes 3–5 business days. Express options are available at checkout. Orders over $150 ship free.",
+    a: "Available delivery options and charges are shown during checkout. We will confirm the delivery estimate with you over WhatsApp.",
   },
   {
     q: "What is your return policy?",
-    a: "We offer a 30-day return window on unused items in their original packaging. Returns are free — just reach out and we'll send a prepaid label.",
+    a: "For help with a return or exchange, contact us through the contact page and include your order ID.",
   },
   {
     q: "Which payment methods do you accept?",
-    a: "We accept all major credit and debit cards. (This is a demo store, so no real payment is processed at checkout.)",
+    a: "Orders are submitted through checkout and confirmed with you on WhatsApp. Cash payment is due when your order is delivered.",
   },
   {
     q: "Can I track my order?",
-    a: "Yes — once your order ships you'll receive a tracking link by email so you can follow it every step of the way.",
+    a: "We will share delivery updates with you over WhatsApp after confirming your order.",
   },
 ];
 
@@ -35,21 +35,21 @@ const decor: FaqItem[] = [
   },
 ];
 
-const activewear: FaqItem[] = [
+const originals: FaqItem[] = [
   {
     q: "How do I choose the right size?",
-    a: "Every product page includes a fit note (athletic, relaxed, compression). If you're between sizes, size up for a relaxed fit or down for compression.",
+    a: "Check the sizes available on each product page. If you need help choosing a fit, send us a message through the contact page.",
   },
   {
-    q: "Is the gear sweat-wicking?",
-    a: "Most of our tops and leggings use moisture-wicking, quick-dry fabrics. Look for the fabric details listed on each product page.",
+    q: "How should I care for my clothes?",
+    a: "Follow the care details listed on each product page. For most everyday pieces, wash cold on a gentle cycle and hang to dry.",
   },
   {
-    q: "Can I machine wash my activewear?",
-    a: "Yes — wash cold on a gentle cycle and hang to dry to preserve stretch and technical finishes. Avoid fabric softener.",
+    q: "Can I change or cancel an order?",
+    a: "Contact us as soon as possible through WhatsApp after placing your order. We will confirm what changes can be made before dispatch.",
   },
 ];
 
 export function getFaqs(brand: Brand): FaqItem[] {
-  return brand === "decor" ? [...decor, ...shared] : [...activewear, ...shared];
+  return brand === "decor" ? [...decor, ...shared] : [...originals, ...shared];
 }

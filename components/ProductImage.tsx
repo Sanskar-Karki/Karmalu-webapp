@@ -63,7 +63,7 @@ export default function ProductImage({
       {!loaded && (
         <div
           aria-hidden
-          className="absolute inset-0 animate-pulse bg-gradient-to-br from-black/5 via-black/10 to-black/5 bg-[length:200%_200%]"
+          className="absolute inset-0 skeleton bg-gradient-to-br from-black/5 via-black/10 to-black/5 bg-[length:200%_200%]"
         />
       )}
       <Image

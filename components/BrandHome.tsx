@@ -1,6 +1,6 @@
 import ProductImage from "@/components/ProductImage";
 import type { Brand } from "@/types";
-import { getCategories, getProducts, getProductsByCategory } from "@/data/catalog";
+import { getCatalog } from "@/lib/catalog-server";
 import CategoryCard from "@/components/CategoryCard";
 import ProductGrid from "@/components/ProductGrid";
 import SectionHeader from "@/components/SectionHeader";
@@ -15,7 +15,7 @@ interface HeroCopy {
   image: string;
 }
 
-export default function BrandHome({
+export default async function BrandHome({
   brand,
   basePath,
   hero,
@@ -24,6 +24,7 @@ export default function BrandHome({
   basePath: string;
   hero: HeroCopy;
 }) {
+  const { getCategories, getProducts, getProductsByCategory } = await getCatalog();
   const categories = getCategories(brand);
   const products = getProducts(brand);
   const featured = products.filter((p) => p.badge).slice(0, 6);

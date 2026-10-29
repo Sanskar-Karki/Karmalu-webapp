@@ -67,7 +67,7 @@ async function createLocalOrder(input: CreateOrderInput): Promise<Order> {
   const order: Order = {
     ...input,
     orderId: buildOrderId(todayCount),
-    status: "Awaiting WhatsApp Confirmation",
+    status: "Pending WhatsApp",
     createdAt: new Date().toISOString(),
   };
   orders.push(order);
@@ -111,7 +111,7 @@ export async function createOrder(
   return {
     ...input,
     orderId: data as string,
-    status: "Awaiting WhatsApp Confirmation",
+    status: "Pending WhatsApp",
     createdAt: new Date().toISOString(),
   };
 }

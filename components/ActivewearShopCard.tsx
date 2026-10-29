@@ -7,6 +7,7 @@ import type { Product } from "@/types";
 import { useBrand, useCart, useCartDrawer } from "@/store/BrandProvider";
 import { Heart, Check } from "@/components/icons";
 import { formatNpr } from "@/lib/currency";
+import { productDiscount } from "@/lib/pricing";
 
 /**
  * Editorial product card (IVL-inspired): generous image tile, quiet
@@ -61,9 +62,7 @@ export default function ActivewearShopCard({ product }: { product: Product }) {
     setWished((v) => !v);
   };
 
-  const discount = product.oldPrice
-    ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
-    : 0;
+  const discount = productDiscount(product);
 
   return (
     <div className="group flex flex-col transition-transform duration-300 ease-out hover:-translate-y-1">
@@ -199,9 +198,9 @@ export default function ActivewearShopCard({ product }: { product: Product }) {
 
         <div className="flex items-center gap-2 mt-0.5">
           <span className="text-[15px] text-[var(--aw-ink)]">{formatNpr(product.price)}</span>
-          {product.oldPrice && (
+          {productDiscount(product) > 0 && (
             <span className="text-[13px] text-[var(--aw-ink-muted)] line-through">
-              {formatNpr(product.oldPrice)}
+              {formatNpr(product.oldPrice!)}
             </span>
           )}
         </div>

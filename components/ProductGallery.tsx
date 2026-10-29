@@ -84,11 +84,12 @@ export default function ProductGallery({
                   key={i}
                   onClick={() => setActive(i)}
                   aria-label={`View image ${i + 1}`}
+                  aria-pressed={active === i}
                   className={`relative w-[72px] h-[90px] rounded-lg overflow-hidden bg-[var(--color-beige)] transition-all duration-200 ${
                     active === i
                       ? "ring-2 ring-[var(--color-ink)] ring-offset-1"
                       : "opacity-55 hover:opacity-100"
-                  }`}
+                  } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2`}
                 >
                   <ProductImage
                     preset="thumb"
@@ -117,11 +118,10 @@ export default function ProductGallery({
         <div className="flex-1 flex flex-col gap-2 relative">
           <div
             ref={imageRef}
-            className={`relative w-full overflow-hidden bg-[var(--color-beige)] cursor-zoom-in xl:cursor-crosshair ${
+            className={`relative w-full overflow-hidden bg-[var(--color-beige)] cursor-default xl:cursor-crosshair ${
               fitViewport ? "" : "aspect-[4/5]"
             } ${zoomed ? "rounded-none" : "rounded-2xl"}`}
-            style={fitViewport ? { height: "calc(100vh - 7rem)" } : undefined}
-            onClick={() => setZoomed((v) => !v)}
+            style={fitViewport ? { height: "min(68svh, 680px)", minHeight: "360px" } : undefined}
             onMouseEnter={() => setMagnifying(true)}
             onMouseLeave={() => setMagnifying(false)}
             onMouseMove={handleMouseMove}
@@ -132,10 +132,19 @@ export default function ProductGallery({
               alt={name}
               fill
               priority
-              className={`object-cover transition-transform duration-500 ${
+              className={`${fitViewport ? "object-contain" : "object-cover"} transition-transform duration-500 ${
                 zoomed ? "scale-150" : "scale-100"
               }`}
             />
+            <button
+              type="button"
+              aria-pressed={zoomed}
+              aria-label={zoomed ? "Return to full product image" : "Zoom product image"}
+              onClick={() => setZoomed((value) => !value)}
+              className="absolute right-3 top-3 z-30 rounded-full bg-white/95 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[var(--color-ink)] shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+            >
+              {zoomed ? "Close zoom" : "Zoom"}
+            </button>
             {/* Hover magnifier lens: shows a zoomed view of exactly the area under the cursor */}
             {magnifying && (
               <div
@@ -157,7 +166,8 @@ export default function ProductGallery({
               <div className="absolute inset-x-3 bottom-3 flex items-center justify-between sm:hidden">
                 <button
                   onClick={(e) => { e.stopPropagation(); setActive((v) => (v - 1 + images.length) % images.length); }}
-                  className="w-9 h-9 rounded-full bg-white/90 flex items-center justify-center shadow"
+                  aria-label="Previous product image"
+                  className="w-9 h-9 rounded-full bg-white/90 flex items-center justify-center shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
                 >
                   <ArrowLeft size={16} />
                 </button>
@@ -166,7 +176,8 @@ export default function ProductGallery({
                 </span>
                 <button
                   onClick={(e) => { e.stopPropagation(); setActive((v) => (v + 1) % images.length); }}
-                  className="w-9 h-9 rounded-full bg-white/90 flex items-center justify-center shadow"
+                  aria-label="Next product image"
+                  className="w-9 h-9 rounded-full bg-white/90 flex items-center justify-center shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
                 >
                   <ArrowRight size={16} />
                 </button>
@@ -184,7 +195,9 @@ export default function ProductGallery({
             <button
               key={i}
               onClick={() => setActive(i)}
-              className={`relative w-16 h-20 rounded-lg overflow-hidden bg-[var(--color-beige)] shrink-0 transition-all ${
+              aria-label={`View image ${i + 1}`}
+              aria-pressed={active === i}
+              className={`relative w-16 h-20 rounded-lg overflow-hidden bg-[var(--color-beige)] shrink-0 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 ${
                 active === i ? "ring-2 ring-[var(--color-ink)] ring-offset-1" : "opacity-50 hover:opacity-100"
               }`}
             >

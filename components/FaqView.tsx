@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useBrand } from "@/store/BrandProvider";
 import SectionHeader from "@/components/SectionHeader";
 import Button from "@/components/Button";
@@ -31,7 +30,7 @@ function Chevron({ open }: { open: boolean }) {
 
 export default function FaqView({ items }: { items: FaqItem[] }) {
   const { basePath, brand } = useBrand();
-  const isFullWidth = brand === "activewear";
+  const isFullWidth = brand === "originals";
   const [open, setOpen] = useState<number | null>(0);
 
   return (

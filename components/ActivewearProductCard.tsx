@@ -5,8 +5,9 @@ import Link from "next/link";
 import { useState } from "react";
 import type { Product } from "@/types";
 import { useBrand, useCart, useCartDrawer } from "@/store/BrandProvider";
-import { Plus, Check, Star } from "@/components/icons";
+import { Plus, Check } from "@/components/icons";
 import { formatNpr } from "@/lib/currency";
+import { productDiscount } from "@/lib/pricing";
 
 export default function ActivewearProductCard({
   product,
@@ -98,10 +99,6 @@ export default function ActivewearProductCard({
 
       {/* Bottom content */}
       <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5 flex flex-col gap-1 text-white">
-        <div className="flex items-center gap-1 text-[11px] text-white/70">
-          <Star size={12} className="text-[var(--aw-highlight)]" />
-          {product.rating} · {product.reviews} reviews
-        </div>
         <h3
           className={`font-bold leading-tight ${
             featured ? "text-2xl sm:text-3xl" : "text-base sm:text-lg"
@@ -113,8 +110,8 @@ export default function ActivewearProductCard({
           <span className={`font-extrabold ${featured ? "text-xl" : "text-base"}`}>
             {formatNpr(product.price)}
           </span>
-          {product.oldPrice && (
-            <span className="text-sm text-white/50 line-through">{formatNpr(product.oldPrice)}</span>
+          {productDiscount(product) > 0 && (
+            <span className="text-sm text-white/50 line-through">{formatNpr(product.oldPrice!)}</span>
           )}
         </div>
 

@@ -12,12 +12,16 @@ export default function ProductTabs({ product }: { product: Product }) {
   return (
     <div className="border-t border-[var(--color-ink)]/8 mt-10">
       {/* Tab bar */}
-      <div className="flex border-b border-[var(--color-ink)]/8 overflow-x-auto no-scrollbar">
+      <div role="tablist" aria-label="Product information" className="flex border-b border-[var(--color-ink)]/8 overflow-x-auto no-scrollbar">
         {TABS.map((tab) => (
           <button
             key={tab}
+            type="button"
+            role="tab"
+            aria-selected={active === tab}
+            aria-controls="product-information-panel"
             onClick={() => setActive(tab)}
-            className={`shrink-0 px-6 py-4 text-sm font-semibold uppercase tracking-widest transition-colors border-b-2 -mb-px ${
+            className={`shrink-0 px-5 py-4 text-xs font-semibold uppercase tracking-widest transition-colors border-b-2 -mb-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--brand)] sm:px-6 sm:text-sm ${
               active === tab
                 ? "border-[var(--color-ink)] text-[var(--color-ink)]"
                 : "border-transparent text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]"
@@ -29,7 +33,7 @@ export default function ProductTabs({ product }: { product: Product }) {
       </div>
 
       {/* Tab content */}
-      <div className="py-8 grid md:grid-cols-2 gap-10 lg:gap-16">
+      <div id="product-information-panel" role="tabpanel" className="py-7 grid md:grid-cols-2 gap-8 lg:gap-16 sm:py-9">
 
         {active === "Product Details" && (
           <>
@@ -52,14 +56,6 @@ export default function ProductTabs({ product }: { product: Product }) {
                     {d}
                   </li>
                 ))}
-                <li className="flex items-start gap-2 text-sm text-[var(--color-ink-muted)]">
-                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[var(--brand)] shrink-0" />
-                  A-line silhouette
-                </li>
-                <li className="flex items-start gap-2 text-sm text-[var(--color-ink-muted)]">
-                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[var(--brand)] shrink-0" />
-                  Contemporary fit
-                </li>
               </ul>
             </div>
           </>
@@ -72,17 +68,12 @@ export default function ProductTabs({ product }: { product: Product }) {
                 Delivery
               </h3>
               <ul className="flex flex-col gap-3 text-sm text-[var(--color-ink-muted)]">
-                {[
-                  { method: "Standard Delivery", detail: "5–7 business days", price: "Free over $150, else $9.99" },
-                  { method: "Express Delivery", detail: "2–3 business days", price: "$9.99" },
-                  { method: "Overnight Delivery", detail: "Next business day", price: "$19.99" },
-                ].map((d) => (
-                  <li key={d.method} className="flex flex-col gap-0.5 pb-3 border-b border-[var(--color-ink)]/6 last:border-0">
-                    <span className="font-semibold text-[var(--color-ink)]">{d.method}</span>
-                    <span>{d.detail}</span>
-                    <span className="font-medium text-[var(--color-ink)]">{d.price}</span>
-                  </li>
-                ))}
+                <li className="rounded-xl bg-[#f8f7f3] p-4 leading-6">
+                  Delivery coverage, timing and any charge are confirmed with you on WhatsApp before the order is accepted.
+                </li>
+                <li className="text-xs leading-5">
+                  The price shown above is for the product. Your team will confirm the delivery cost and final amount before fulfillment.
+                </li>
               </ul>
             </div>
             <div className="flex flex-col gap-4">
@@ -91,10 +82,9 @@ export default function ProductTabs({ product }: { product: Product }) {
               </h3>
               <ul className="flex flex-col gap-2 text-sm text-[var(--color-ink-muted)]">
                 {[
-                  "Free returns within 30 days of delivery.",
-                  "Items must be unworn, unwashed and in original condition with tags attached.",
-                  "Sale items are eligible for exchange or store credit.",
-                  "Start a return from your account or contact us at hello@karmalu.com.",
+                  "Please contact our team with your order number for return or exchange assistance.",
+                  "Ask about eligibility and available options before confirming your order.",
+                  "Payment arrangements are confirmed by our team during the WhatsApp conversation.",
                 ].map((t) => (
                   <li key={t} className="flex items-start gap-2">
                     <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[var(--brand)] shrink-0" />
@@ -114,11 +104,9 @@ export default function ProductTabs({ product }: { product: Product }) {
               </h3>
               <ul className="flex flex-col gap-2 text-sm text-[var(--color-ink-muted)]">
                 {[
-                  "59% Wool, 9% Viscose, 5% Nylon, 27% Polyester blended performance fabric.",
-                  "Machine wash cold on gentle cycle.",
-                  "Do not tumble dry — lay flat to dry.",
-                  "Warm iron on reverse if needed.",
-                  "Do not bleach or dry-clean.",
+                  "Please follow the care label on the product.",
+                  "Care needs vary by fabric and item.",
+                  "Contact us if you need material or care details before ordering.",
                 ].map((t) => (
                   <li key={t} className="flex items-start gap-2">
                     <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[var(--brand)] shrink-0" />
@@ -133,12 +121,9 @@ export default function ProductTabs({ product }: { product: Product }) {
               </h3>
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { icon: "🌊", label: "Machine wash cold" },
-                  { icon: "❄️", label: "Gentle cycle" },
-                  { icon: "🚫🔥", label: "No tumble dry" },
-                  { icon: "♨️", label: "Warm iron" },
-                  { icon: "🚫☢️", label: "No bleach" },
-                  { icon: "✅", label: "Dry flat" },
+                  { icon: "🏷️", label: "Check care label" },
+                  { icon: "🧺", label: "Follow fabric guidance" },
+                  { icon: "💬", label: "Ask us for help" },
                 ].map((c) => (
                   <div
                     key={c.label}

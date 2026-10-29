@@ -7,12 +7,8 @@ import { useBrand, useCart, useCartDrawer } from "@/store/BrandProvider";
 import QtyStepper from "@/components/QtyStepper";
 import Button from "@/components/Button";
 import { Trash, Close } from "@/components/icons";
-import {
-  formatNpr,
-  FREE_SHIPPING_THRESHOLD,
-  amountToFreeShipping,
-  qualifiesForFreeShipping,
-} from "@/lib/currency";
+import { formatNpr } from "@/lib/currency";
+import CartPerks from "@/components/CartPerks";
 
 export default function CartDrawer() {
   const { basePath, label } = useBrand();
@@ -42,14 +38,7 @@ export default function CartDrawer() {
 
   const items = mounted ? cart.items : [];
   const subtotal = mounted ? cart.subtotal() : 0;
-  const freeShipping = subtotal === 0 || qualifiesForFreeShipping(subtotal);
-  const shippingMethod = mounted ? cart.shippingMethod : null;
-  // Shipping is picked at checkout; until then we can't know the real cost.
-  const shippingKnown = Boolean(shippingMethod);
-  const shipping = freeShipping ? 0 : shippingMethod?.cost ?? 0;
-  const total = subtotal + (shippingKnown ? shipping : 0);
-  const remaining = amountToFreeShipping(subtotal);
-  const progressPct = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
+  const savings = mounted ? cart.savings() : 0;
 
   return (
     <>
@@ -125,6 +114,9 @@ export default function CartDrawer() {
                     </Link>
                     <p className="text-xs text-[var(--color-ink-muted)]">
                       {formatNpr(item.price)}
+                      {item.oldPrice && item.oldPrice > item.price && (
+                        <span className="ml-1 line-through">{formatNpr(item.oldPrice)}</span>
+                      )}
                       {item.size && <span className="ml-1">· Size {item.size}</span>}
                       {item.color && <span className="ml-1">· {item.color}</span>}
                     </p>
@@ -149,56 +141,21 @@ export default function CartDrawer() {
 
             {/* Footer */}
             <div className="border-t border-[var(--color-ink)]/8 px-6 py-5 flex flex-col gap-3 shrink-0">
-              {/* Free-shipping progress */}
-              <div className="flex flex-col gap-2 rounded-lg bg-[var(--brand-soft)] px-3 py-2.5">
-                <p className="text-xs text-[var(--color-ink)] text-center">
-                  {remaining > 0 ? (
-                    <>
-                      You&apos;re <span className="font-bold text-[var(--brand)]">{formatNpr(remaining)}</span> away from{" "}
-                      <span className="font-semibold">free shipping</span>.
-                    </>
-                  ) : (
-                    <span className="font-semibold text-[var(--brand)]">
-                      🎉 You&apos;ve unlocked free shipping!
-                    </span>
-                  )}
-                </p>
-                <div
-                  className="h-2 w-full overflow-hidden rounded-full bg-[var(--color-ink)]/10"
-                  role="progressbar"
-                  aria-valuemin={0}
-                  aria-valuemax={FREE_SHIPPING_THRESHOLD}
-                  aria-valuenow={Math.min(subtotal, FREE_SHIPPING_THRESHOLD)}
-                  aria-label="Progress toward free shipping"
-                >
-                  <div
-                    className="h-full rounded-full bg-[var(--brand)] transition-[width] duration-500 ease-out"
-                    style={{ width: `${progressPct}%` }}
-                  />
-                </div>
-              </div>
-
+              <CartPerks subtotal={subtotal} savings={savings} />
               <div className="flex justify-between text-sm">
-                <span className="text-[var(--color-ink-muted)]">Subtotal</span>
-                <span className="font-semibold">{formatNpr(subtotal)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-[var(--color-ink-muted)]">Shipping</span>
-                <span className={`font-semibold ${!shippingKnown ? "text-[var(--color-ink-muted)] italic" : ""}`}>
-                  {!shippingKnown
-                    ? "Calculated at next step"
-                    : shipping === 0
-                    ? "Free"
-                    : formatNpr(shipping)}
-                </span>
+                <span className="text-[var(--color-ink-muted)]">Delivery</span>
+                <span className="text-right text-xs font-semibold text-[var(--color-ink-muted)]">Confirmed on WhatsApp</span>
               </div>
               <div className="flex justify-between text-base font-bold border-t border-[var(--color-ink)]/8 pt-3">
-                <span>Total</span>
-                <span>{formatNpr(total)}</span>
+                <span>Products subtotal</span>
+                <span>{formatNpr(subtotal)}</span>
               </div>
+              <p className="text-[11px] leading-5 text-[var(--color-ink-muted)]">
+                Delivery charges are confirmed before your request is accepted.
+              </p>
 
               <Button href={`${basePath}/checkout`} size="lg" fullWidth onClick={closeDrawer}>
-                Checkout
+                Order request
               </Button>
               <Link
                 href={`${basePath}/cart`}

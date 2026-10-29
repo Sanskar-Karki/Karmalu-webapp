@@ -62,7 +62,7 @@ export default function GlobalError({
 
       <footer className="px-6 py-5 flex items-center justify-center border-t border-white/5">
         <p className="text-[9px] font-semibold tracking-[0.3em] uppercase text-white/15">
-          © {new Date().getFullYear()} KARMALU · Two worlds, one soul
+          © {new Date().getFullYear()} KARMALU · Two collections, one soul
         </p>
       </footer>
     </div>

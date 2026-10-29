@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getCategories } from "@/data/catalog";
+import { getCatalog } from "@/lib/catalog-server";
 import CategoryView from "@/components/CategoryView";
 
 export const metadata: Metadata = {
@@ -7,8 +7,8 @@ export const metadata: Metadata = {
   description: "Browse the full KARMALU Living & Decor collection — rugs, cushions, vases, wall art, lamps and more.",
 };
 
-export default function DecorShopPage() {
-  const categories = getCategories("decor");
+export default async function DecorShopPage() {
+  const categories = (await getCatalog()).getCategories("decor");
   // Use the first category's image for the hero; defaultFilter="all" starts the grid showing everything
   const heroCategory = categories[0];
 

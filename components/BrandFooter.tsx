@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useBrand } from "@/store/BrandProvider";
-import { getCategories } from "@/data/catalog";
+import { useCatalog } from "@/store/CatalogProvider";
 
 function InstagramIcon() {
   return (
@@ -22,6 +23,14 @@ function TikTokIcon() {
   );
 }
 
+function FacebookIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073c0 6.02 4.388 11.016 10.125 11.854v-8.385H7.078v-3.47h3.047V9.429c0-3.026 1.792-4.698 4.533-4.698 1.312 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.931-1.956 1.886v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.09 24 18.093 24 12.073Z" />
+    </svg>
+  );
+}
+
 function PinterestIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -32,14 +41,43 @@ function PinterestIcon() {
 
 export default function BrandFooter() {
   const { brand, label, basePath } = useBrand();
+  const { getCategories } = useCatalog();
   const categories = getCategories(brand);
   const year = new Date().getFullYear();
+  const companyLinks =
+    brand === "originals"
+      ? [{ href: `${basePath}/contact`, label: "Contact" }]
+      : [
+          { href: `${basePath}/about`, label: "About" },
+          { href: `${basePath}/faq`, label: "FAQ" },
+          { href: `${basePath}/contact`, label: "Contact" },
+          { href: "/", label: "All brands" },
+        ];
 
-  const socialLinks = [
-    { href: "https://instagram.com/karmalu", label: "Follow KARMALU on Instagram", icon: <InstagramIcon /> },
-    { href: "https://tiktok.com/@karmalu", label: "Follow KARMALU on TikTok", icon: <TikTokIcon /> },
-    { href: "https://pinterest.com/karmalu", label: "Follow KARMALU on Pinterest", icon: <PinterestIcon /> },
-  ];
+  const socialLinks =
+    brand === "originals"
+      ? [
+          {
+            href: "https://www.instagram.com/karmalu_originals/",
+            label: "Follow Karmalu Originals on Instagram",
+            icon: <InstagramIcon />,
+          },
+          {
+            href: "https://www.tiktok.com/@karmalu.originals",
+            label: "Follow Karmalu Originals on TikTok",
+            icon: <TikTokIcon />,
+          },
+          {
+            href: "https://www.facebook.com/profile.php?id=61594093221355",
+            label: "Follow Karmalu Originals on Facebook",
+            icon: <FacebookIcon />,
+          },
+        ]
+      : [
+          { href: "https://instagram.com/karmalu", label: "Follow KARMALU on Instagram", icon: <InstagramIcon /> },
+          { href: "https://tiktok.com/@karmalu", label: "Follow KARMALU on TikTok", icon: <TikTokIcon /> },
+          { href: "https://pinterest.com/karmalu", label: "Follow KARMALU on Pinterest", icon: <PinterestIcon /> },
+        ];
 
   return (
     <footer className="border-t border-[var(--color-ink)]/8 bg-[var(--page-bg)] mt-auto">
@@ -48,12 +86,24 @@ export default function BrandFooter() {
         {/* Brand column */}
         <div className="col-span-2 md:col-span-1 flex flex-col gap-4">
           <div className="flex flex-col gap-1">
-            <span className="font-display text-lg font-bold tracking-[0.12em] uppercase text-[var(--color-ink)]">
-              KARMALU
-            </span>
-            <span className="text-xs font-semibold tracking-widest uppercase text-[var(--brand)]">
-              {label}
-            </span>
+            {brand === "originals" ? (
+              <Image
+                src="/logos/karmalu%20originals%20logo.png"
+                alt="Karmalu Originals"
+                width={1845}
+                height={553}
+                className="h-auto w-40"
+              />
+            ) : (
+              <>
+                <span className="font-display text-lg font-bold tracking-[0.12em] uppercase text-[var(--color-ink)]">
+                  KARMALU
+                </span>
+                <span className="text-xs font-semibold tracking-widest uppercase text-[var(--brand)]">
+                  {label}
+                </span>
+              </>
+            )}
           </div>
           <p className="text-sm text-[var(--color-ink-muted)] leading-relaxed max-w-xs">
             Crafted with intention. Made to last.
@@ -100,12 +150,7 @@ export default function BrandFooter() {
             Company
           </h3>
           <ul className="flex flex-col gap-2">
-            {[
-              { href: `${basePath}/about`, label: "About" },
-              { href: `${basePath}/faq`, label: "FAQ" },
-              { href: `${basePath}/contact`, label: "Contact" },
-              { href: "/", label: "All brands" },
-            ].map(({ href, label: linkLabel }) => (
+            {companyLinks.map(({ href, label: linkLabel }) => (
               <li key={href}>
                 <Link
                   href={href}
@@ -161,12 +206,16 @@ export default function BrandFooter() {
           © {year} KARMALU {label}. All rights reserved.
         </p>
         <div className="flex items-center gap-4">
-          <Link href={`${basePath}/faq`} className="text-xs text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] transition-colors">
-            Privacy
-          </Link>
-          <Link href={`${basePath}/faq`} className="text-xs text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] transition-colors">
-            Terms
-          </Link>
+          {brand !== "originals" && (
+            <>
+              <Link href={`${basePath}/faq`} className="text-xs text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] transition-colors">
+                Privacy
+              </Link>
+              <Link href={`${basePath}/faq`} className="text-xs text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] transition-colors">
+                Terms
+              </Link>
+            </>
+          )}
           <span className="text-xs text-[var(--color-ink-muted)]">Designed with intention.</span>
         </div>
       </div>

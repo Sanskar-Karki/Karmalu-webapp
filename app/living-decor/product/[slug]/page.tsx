@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getProduct, getProducts } from "@/data/catalog";
+import { getCatalog } from "@/lib/catalog-server";
 import DecorProductDetail from "@/components/DecorProductDetail";
 
-export function generateStaticParams() {
-  return getProducts("decor").map((p) => ({ slug: p.slug }));
+export async function generateStaticParams() {
+  return (await getCatalog()).getProducts("decor").map((p) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({
@@ -13,7 +13,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProduct("decor", slug);
+  const product = (await getCatalog()).getProduct("decor", slug);
   if (!product) return { title: "Not found" };
   return { title: product.name, description: product.description };
 }
@@ -24,7 +24,7 @@ export default async function DecorProductPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const product = getProduct("decor", slug);
+  const product = (await getCatalog()).getProduct("decor", slug);
   if (!product) notFound();
 
   return (

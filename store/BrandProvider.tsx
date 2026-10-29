@@ -3,7 +3,7 @@
 import { createContext, useContext, useState } from "react";
 import type { Brand } from "@/types";
 import type { CartState } from "./createCartStore";
-import { useDecorCart, useActivewearCart } from "./carts";
+import { useDecorCart, useOriginalsCart } from "./carts";
 
 interface BrandConfig {
   brand: Brand;
@@ -19,11 +19,11 @@ const configs: Record<Brand, BrandConfig> = {
     basePath: "/living-decor",
     useCart: useDecorCart,
   },
-  activewear: {
-    brand: "activewear",
-    label: "Activewear",
-    basePath: "/activewear",
-    useCart: useActivewearCart,
+  originals: {
+    brand: "originals",
+    label: "Originals",
+    basePath: "/originals",
+    useCart: useOriginalsCart,
   },
 };
 

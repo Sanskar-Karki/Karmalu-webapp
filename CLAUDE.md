@@ -9,5 +9,6 @@ Before doing any work on this project, **read the entire `claude/` folder** in o
 5. `claude/04_sample_data.json` — product data examples
 6. `claude/05_component_specs.md` — component requirements
 7. `claude/06_page_requirements.md` — per-page detail
+8. `claude/07_admin.md` — admin panel, product database & media uploads
 
 That folder is the source of truth for this project. Follow it.

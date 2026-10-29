@@ -1,11 +1,8 @@
 import ProductImage from "@/components/ProductImage";
 import Link from "next/link";
 import type { Brand } from "@/types";
-import {
-  getCategories,
-  getProducts,
-  getProductsByCategory,
-} from "@/data/catalog";
+import { getCatalog } from "@/lib/catalog-server";
+import { homePicks } from "@/lib/home-picks";
 import DecorShopCard from "@/components/DecorShopCard";
 import { ArrowRight, Check } from "@/components/icons";
 import NewsletterForm from "@/components/NewsletterForm";
@@ -26,7 +23,7 @@ interface HeroCopy {
  * language: split serif hero, image-card category grid, featured edit,
  * values strip and a warm newsletter band. Wired to the real decor catalog.
  */
-export default function DecorHome({
+export default async function DecorHome({
   basePath,
   hero,
 }: {
@@ -34,11 +31,15 @@ export default function DecorHome({
   basePath: string;
   hero: HeroCopy;
 }) {
+  const { getCategories, getProducts, getProductsByCategory } = await getCatalog();
   const brand: Brand = "decor";
   const categories = getCategories(brand);
   const products = getProducts(brand);
-  const featured = products.filter((p) => p.badge);
-  const featuredList = (featured.length >= 3 ? featured : products).slice(0, 8);
+  // Hand-picked order from the admin (Home page screen), else badged products.
+  const { items: featuredList } = homePicks(products, () => {
+    const featured = products.filter((p) => p.badge);
+    return (featured.length >= 3 ? featured : products).slice(0, 8);
+  });
 
   const highlights =
     hero.highlights ?? ["Natural materials", "Quiet luxury", "Made for daily living"];

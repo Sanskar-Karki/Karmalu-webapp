@@ -11,7 +11,7 @@ const VARIANT_STYLES = {
     message: "text-[var(--brand-contrast)]/70",
     cta: "Subscribe",
   },
-  activewear: {
+  originals: {
     input:
       "bg-[var(--aw-bg)]/15 border border-[var(--aw-bg)]/30 text-[var(--aw-bg)] placeholder:text-[var(--aw-bg)]/40 focus:border-[var(--aw-bg)]/70",
     button: "bg-[var(--aw-bg)] text-[var(--aw-ink)] hover:bg-[var(--aw-maroon)] hover:text-[var(--aw-bg)]",

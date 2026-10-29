@@ -18,7 +18,7 @@ interface AboutContent {
 
 export default function AboutView({ content }: { content: AboutContent }) {
   const { brand } = useBrand();
-  const isFullWidth = brand === "activewear";
+  const isFullWidth = brand === "originals";
   const wrapCls = isFullWidth ? "" : "max-w-7xl mx-auto";
 
   return (

@@ -1,481 +1,375 @@
-import Image from "next/image";
-import ProductImage from "@/components/ProductImage";
 import Link from "next/link";
-import { getCategories, getProducts } from "@/data/catalog";
+import ProductImage from "@/components/ProductImage";
 import ActivewearShopCard from "@/components/ActivewearShopCard";
-import ActivewearHero from "@/components/ActivewearHero";
 import NewsletterForm from "@/components/NewsletterForm";
-import { ArrowRight, Star } from "@/components/icons";
-import { formatNpr } from "@/lib/currency";
+import OriginalsHero from "@/components/OriginalsHero";
+import Reveal from "@/components/Reveal";
+import { ArrowRight } from "@/components/icons";
+import { getCatalog } from "@/lib/catalog-server";
+import { formatNpr, FREE_SHIPPING_THRESHOLD } from "@/lib/currency";
+import { homePicks } from "@/lib/home-picks";
 
-const basePath = "/activewear";
+const basePath = "/originals";
+const instagramUrl = "https://www.instagram.com/karmalu_originals/";
+// The top (pinned) posts of @karmalu_originals, in profile order.
+// To change them, copy a post's link from Instagram and keep the /embed/ suffix.
+const instagramPosts = [
+  {
+    url: "https://www.instagram.com/reel/Dci35WSpGnm/embed/",
+    title: "Karmalu Originals featured Instagram reel 1",
+  },
+  {
+    url: "https://www.instagram.com/reel/Dci0rvWpjQ_/embed/",
+    title: "Karmalu Originals featured Instagram reel 2",
+  },
+  {
+    url: "https://www.instagram.com/reel/Dd1QKgUJNU9/embed/",
+    title: "Karmalu Originals featured Instagram reel 3",
+  },
+];
 
-/* ── Small section label/heading pair ── */
-function SectionHead({
-  kicker,
+function SectionHeading({
+  eyebrow,
   title,
-  align = "left",
+  id,
+  light = false,
 }: {
-  kicker?: string;
+  eyebrow: string;
   title: string;
-  align?: "left" | "center";
+  id?: string;
+  light?: boolean;
 }) {
   return (
-    <div className={align === "center" ? "text-center" : ""}>
-      {kicker && (
-        <span className="text-[11px] font-medium tracking-[0.3em] uppercase text-[var(--aw-ink-muted)]">
-          {kicker}
-        </span>
-      )}
-      <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl tracking-[-0.01em] text-[var(--aw-ink)] mt-3 leading-[1.02]">
+    <Reveal>
+      <p
+        className={`flex items-center gap-3 text-[10px] font-medium uppercase tracking-[0.28em] ${
+          light ? "text-white/60" : "text-[var(--aw-ink-muted)]"
+        }`}
+      >
+        <span
+          aria-hidden
+          className={`reveal-line block h-px w-8 ${
+            light ? "bg-white/60" : "bg-[var(--aw-highlight)]"
+          }`}
+        />
+        {eyebrow}
+      </p>
+      <h2
+        id={id}
+        className={`mt-4 font-display text-4xl font-medium leading-[1.02] tracking-[-0.03em] sm:text-5xl lg:text-6xl ${
+          light ? "text-white" : "text-[var(--aw-ink)]"
+        }`}
+      >
         {title}
       </h2>
-    </div>
+    </Reveal>
   );
 }
 
-/* ── Quiet text link ── */
-function TextLink({ href, children }: { href: string; children: React.ReactNode }) {
-  return (
-    <Link
-      href={href}
-      className="group inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--aw-ink)] border-b border-[var(--aw-ink)]/30 pb-1 hover:border-[var(--aw-ink)] transition-colors"
-    >
-      {children}
-      <ArrowRight
-        size={13}
-        className="transition-transform group-hover:translate-x-0.5"
-      />
+function SweepLink({
+  href,
+  children,
+  external = false,
+}: {
+  href: string;
+  children: React.ReactNode;
+  external?: boolean;
+}) {
+  const className =
+    "group inline-flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.18em] text-[var(--aw-ink)]";
+  const inner = (
+    <>
+      <span className="link-sweep pb-1">{children}</span>
+      <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--aw-ink)]/20 transition-all duration-300 group-hover:border-[var(--aw-ink)] group-hover:bg-[var(--aw-ink)] group-hover:text-white">
+        <ArrowRight
+          size={12}
+          className="transition-transform duration-300 group-hover:-rotate-45"
+        />
+      </span>
+    </>
+  );
+  return external ? (
+    <a href={href} target="_blank" rel="noreferrer" className={className}>
+      {inner}
+    </a>
+  ) : (
+    <Link href={href} className={className}>
+      {inner}
     </Link>
   );
 }
 
-/* ── Testimonial card (marquee) ── */
-interface Testimonial {
-  name: string;
-  date: string;
-  avatar: string;
-  text: string;
-  rating: number;
-}
-
-function TestimonialCard({ name, date, avatar, text, rating }: Testimonial) {
-  return (
-    <div className="w-[300px] sm:w-[360px] shrink-0 bg-[var(--aw-bg)] p-7 flex flex-col gap-5 border border-[var(--aw-ink)]/10">
-      <div className="flex gap-0.5">
-        {Array.from({ length: rating }).map((_, i) => (
-          <Star key={i} size={13} className="text-[var(--aw-ink)]" />
-        ))}
-      </div>
-      <p className="text-[var(--aw-ink)]/75 leading-relaxed text-[15px] font-display">
-        &ldquo;{text}&rdquo;
-      </p>
-      <div className="flex items-center gap-3 mt-auto pt-2">
-        <div className="relative w-10 h-10 rounded-full overflow-hidden shrink-0">
-          <Image src={avatar} alt={name} fill sizes="40px" className="object-cover" />
-        </div>
-        <div className="min-w-0">
-          <p className="font-medium text-[var(--aw-ink)] text-sm truncate">{name}</p>
-          <p className="text-[var(--aw-ink-muted)] text-xs">{date}</p>
-        </div>
-      </div>
-    </div>
+export default async function ActivewearHome() {
+  const { getCategories, getProducts } = await getCatalog();
+  const categories = getCategories("originals");
+  // Newest first, topped up with other pieces so the 2-col (mobile) and
+  // 3-col (desktop) grids both fill complete rows; the 4th hides on desktop.
+  const products = getProducts("originals");
+  // Hand-picked order from the admin (Home page screen), else newest first.
+  const { items: newArrivals, curated } = homePicks(products, () =>
+    [...products.filter((p) => p.badge === "New"), ...products.filter((p) => p.badge !== "New")].slice(0, 4),
   );
-}
-
-function TestimonialRow({
-  items,
-  direction,
-}: {
-  items: Testimonial[];
-  direction: "left" | "right";
-}) {
-  const track = direction === "left" ? "marquee-track-left" : "marquee-track-right";
-  const doubled = [...items, ...items];
-  return (
-    <div className="overflow-hidden">
-      <div className={`flex w-max gap-5 ${track}`}>
-        {doubled.map((t, i) => (
-          <TestimonialCard key={`${t.name}-${i}`} {...t} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-export default function ActivewearHome() {
-  const categories = getCategories("activewear");
-  const products = getProducts("activewear");
-
-  const bestSellersSlice = products.filter((p) => p.badge === "Bestseller").slice(0, 4);
-  const newArrivalsSlice = products.filter((p) => p.badge === "New").slice(0, 4);
-
-  const communityPhotos = [
-    {
-      src: "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=600&q=80",
-      handle: "@karmalu_moves",
-    },
-    {
-      src: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&q=80",
-      handle: "@daily.reps",
-    },
-    {
-      src: "https://images.unsplash.com/photo-1538805060514-97d9cc17730c?w=600&q=80",
-      handle: "@yoga.with.k",
-    },
-    {
-      src: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=600&q=80",
-      handle: "@street.fit",
-    },
-    {
-      src: "https://images.unsplash.com/photo-1550345332-09e3ac987658?w=600&q=80",
-      handle: "@run.her.way",
-    },
-  ];
-
-  const whyKarmalu = [
-    {
-      title: "Performance first",
-      body: "Engineered fabrics and construction that keep up with every session.",
-    },
-    {
-      title: "Tested for real",
-      body: "Proven in the gym, on the road and in the ring — not just on paper.",
-    },
-    {
-      title: "Sharp by design",
-      body: "Gear that looks as good off-duty as it performs on.",
-    },
-  ];
-
-  const testimonials: Testimonial[] = [
-    {
-      name: "Priya Sharma",
-      date: "23rd March",
-      avatar:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80",
-      text: "The Zen Flow leggings are perfect. I've bought the same pair every six months for two years.",
-      rating: 5,
-    },
-    {
-      name: "Marcus Webb",
-      date: "19th March",
-      avatar:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&q=80",
-      text: "Finally, joggers that look good and perform. Gym, then dinner. Zero complaints.",
-      rating: 5,
-    },
-    {
-      name: "Aisha Thomas",
-      date: "15th March",
-      avatar:
-        "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=100&q=80",
-      text: "The quality is unreal for the price. I'm completely converted.",
-      rating: 5,
-    },
-    {
-      name: "James Khan",
-      date: "11th March",
-      avatar:
-        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&q=80",
-      text: "Three training tees, still going strong after a year of daily use. The fit is just right.",
-      rating: 5,
-    },
-    {
-      name: "Sofia Reyes",
-      date: "8th March",
-      avatar:
-        "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&q=80",
-      text: "Every piece feels premium. The sports bra especially — zero bounce, all-day comfort.",
-      rating: 5,
-    },
-    {
-      name: "Ben Lawson",
-      date: "4th March",
-      avatar:
-        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&q=80",
-      text: "The quarter-zip is my go-to for cold runs. Warm without overheating.",
-      rating: 5,
-    },
-  ];
-  const rowA = testimonials.slice(0, 3);
-  const rowB = testimonials.slice(3);
-
-  const spotlight = products.find((p) => p.badge === "Bestseller") ?? products[0];
+  const featured = newArrivals[0];
+  const marqueeText = `Free delivery on orders over ${formatNpr(FREE_SHIPPING_THRESHOLD)}`;
 
   return (
     <div className="flex flex-col bg-[var(--aw-bg)]">
-      {/* ── 1. HERO (full screen) ── */}
-      <ActivewearHero />
+      {/* Without JS the reveal observer never runs — keep content visible. */}
+      <noscript>
+        <style>{`.reveal{opacity:1!important;transform:none!important;clip-path:none!important}.reveal-line{transform:none!important}`}</style>
+      </noscript>
 
-      {/* ── 2. SHOP BY CATEGORY ── */}
-      <section className="py-20 lg:py-28 px-6">
-        <div className="w-full">
-          <div className="flex flex-wrap items-end justify-between gap-6 mb-14">
-            <SectionHead kicker="Collections" title="Shop by Category" />
-            <TextLink href={`${basePath}/shop`}>All products</TextLink>
+      <OriginalsHero
+        feature={
+          featured && {
+            name: featured.name,
+            href: `${basePath}/product/${featured.slug}`,
+            image: featured.image,
+            price: formatNpr(featured.price),
+          }
+        }
+      />
+
+      {/* Free-delivery marquee */}
+      <p className="sr-only">{marqueeText}</p>
+      <div
+        aria-hidden
+        className="marquee-hover-pause overflow-hidden border-y border-white/10 bg-green-700 py-2 text-white"
+      >
+        <div className="animate-marquee flex w-max ">
+          {[0, 1].map((copy) => (
+            <div key={copy} className="flex shrink-0 items-center">
+              {Array.from({ length: 6 }, (_, i) => (
+                <span
+                  key={`${copy}-${i}`}
+                  className="flex items-center gap-6 pr-6 text-[12px] font-bold uppercase tracking-[0.25em] sm:text-[14px]"
+                >
+                  {marqueeText}
+                  <span className="text-white">✦</span>
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* New arrivals */}
+      <section className="px-5 py-20 sm:px-8 sm:py-24 lg:px-14 lg:py-32">
+        <div className="mb-10 flex flex-wrap items-end justify-between gap-6 sm:mb-14">
+          <div>
+            <SectionHeading eyebrow="Just dropped" title="New Arrivals" />
+            <Reveal delay={120}>
+              <p className="mt-4 max-w-md text-sm leading-relaxed text-[var(--aw-ink-muted)]">
+                Meet the newest pieces in the Karmalu Originals collection.
+              </p>
+            </Reveal>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {categories.map((cat) => (
+          <Reveal delay={200}>
+            <SweepLink href={`${basePath}/shop`}>Shop all</SweepLink>
+          </Reveal>
+        </div>
+        <div className="grid grid-cols-2 gap-x-3 gap-y-10 sm:gap-x-5 lg:grid-cols-3 lg:gap-x-7">
+          {newArrivals.map((product, i) => (
+            <Reveal
+              key={product.id}
+              delay={i * 120}
+              // Automatic mode shows 4 so 2-col rows fill; the 4th hides on the 3-col desktop grid.
+              className={!curated && i === 3 ? "lg:hidden" : undefined}
+            >
+              <ActivewearShopCard product={product} />
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Categories */}
+      <section
+        id="categories"
+        className="scroll-mt-16 bg-[var(--aw-secondary)] px-5 py-20 sm:px-8 sm:py-24 lg:px-14 lg:py-32"
+      >
+        <div className="mb-10 flex flex-wrap items-end justify-between gap-6 sm:mb-14">
+          <div>
+            <SectionHeading eyebrow="Find your fit" title="Shop by Category" />
+            <Reveal delay={120}>
+              <p className="mt-4 max-w-md text-sm leading-relaxed text-[var(--aw-ink-muted)]">
+                Explore everyday pieces for every wardrobe and occasion.
+              </p>
+            </Reveal>
+          </div>
+          <Reveal delay={200}>
+            <SweepLink href={`${basePath}/shop`}>View all</SweepLink>
+          </Reveal>
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
+          {categories.map((category, i) => (
+            <Reveal key={category.slug} variant="scale" delay={(i % 3) * 110}>
               <Link
-                key={cat.slug}
-                href={`${basePath}/${cat.slug}`}
-                className="group relative overflow-hidden aspect-[3/4] bg-[var(--aw-secondary)]"
+                href={`${basePath}/${category.slug}`}
+                className="group relative block aspect-[4/5] overflow-hidden rounded-2xl bg-[var(--aw-bg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--aw-highlight)] focus-visible:ring-offset-2 sm:aspect-[5/4]"
               >
                 <ProductImage
                   preset="card"
-                  src={cat.image}
-                  alt={cat.name}
+                  src={category.image}
+                  alt={category.name}
                   fill
-                  sizes="(max-width: 768px) 100vw, 33vw"
-                  className="object-cover transition-transform duration-[900ms] ease-out group-hover:scale-105"
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 30vw"
+                  className="object-cover transition-transform duration-[1.2s] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
-                <div className="absolute inset-0 p-8 flex flex-col justify-end">
-                  <h3 className="font-display text-white text-3xl sm:text-4xl leading-none mb-2">
-                    {cat.name}
-                  </h3>
-                  <p className="text-white/75 text-sm mb-4 max-w-xs">
-                    {cat.tagline}
-                  </p>
-                  <span className="inline-flex items-center gap-2 text-white text-[11px] font-medium uppercase tracking-[0.2em] translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                    Explore <ArrowRight size={13} />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent transition-opacity duration-500 group-hover:opacity-90" />
+                <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/45 to-transparent" />
+                <span
+                  aria-hidden
+                  className="absolute left-4 top-4 font-display text-xs font-medium tracking-[0.2em] text-white/80 sm:left-6 sm:top-5">
+                  {String(i + 1).padStart(2, "0")}
+                  <span className="text-white/60">
+                    {" "}
+                    / {String(categories.length).padStart(2, "0")}
                   </span>
+                </span>
+                <span className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-md transition-all duration-500 group-hover:rotate-[-45deg] group-hover:bg-white group-hover:text-[var(--aw-ink)] sm:right-5 sm:top-5 sm:h-10 sm:w-10">
+                  <ArrowRight size={15} />
+                </span>
+                <div className="absolute inset-x-0 bottom-0 p-4 text-white sm:p-6">
+                  <h3 className="font-display text-2xl font-medium tracking-[-0.02em] transition-transform duration-500 group-hover:-translate-y-1 sm:text-3xl">
+                    {category.name}
+                  </h3>
+                  <p className="mt-1 hidden max-w-xs text-xs leading-relaxed text-white/80 transition-all duration-500 sm:block sm:translate-y-2 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100 sm:group-focus-visible:translate-y-0 sm:group-focus-visible:opacity-100 [@media(hover:none)]:translate-y-0 [@media(hover:none)]:opacity-100">
+                    {category.tagline}
+                  </p>
                 </div>
               </Link>
-            ))}
-          </div>
+            </Reveal>
+          ))}
         </div>
       </section>
 
-      {/* ── 3. BEST SELLERS ── */}
-      <section className="py-20 lg:py-28 px-6 bg-[var(--aw-secondary)]">
-        <div className="w-full">
-          <div className="flex flex-col items-center text-center gap-5 mb-14">
-            <SectionHead
-              kicker="Hand-picked"
-              title="Best Sellers"
-              align="center"
-            />
-            <p className="max-w-md text-[var(--aw-ink-muted)] text-[15px] leading-relaxed">
-              Our most-loved pieces — quietly considered, endlessly wearable.
-            </p>
-            <TextLink href={`${basePath}/shop`}>Shop the edit</TextLink>
-          </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-10 sm:gap-x-6">
-            {bestSellersSlice.map((p) => (
-              <ActivewearShopCard key={p.id} product={p} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── 4. BRAND STORY ── */}
-      <section className="py-20 lg:py-28 px-6">
-        <div className="w-full grid md:grid-cols-2 gap-12 lg:gap-20 items-center">
-          <div className="relative aspect-[4/5] order-1 md:order-1 overflow-hidden">
-            <ProductImage
-              preset="banner"
-              src="https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=900&h=1125&fit=crop&q=80"
-              alt="Our story"
-              fill
-              sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover"
-            />
-          </div>
-          <div className="order-2 flex flex-col gap-6">
-            <span className="text-[11px] font-medium tracking-[0.3em] uppercase text-[var(--aw-ink-muted)]">
-              Our story
-            </span>
-            <h2 className="font-display text-4xl sm:text-5xl leading-[1.02] text-[var(--aw-ink)]">
-              The best clothes
-              <br />
-              <span className="italic font-light">disappear</span> when
-              <br />
-              you wear them.
-            </h2>
-            <p className="text-[var(--aw-ink-muted)] leading-relaxed max-w-md">
-              KARMALU Activewear began with a simple belief: you shouldn&apos;t
-              be thinking about your leggings mid-run. We obsess over fabric,
-              fit and finish so you can focus on moving — wherever life takes
-              you.
-            </p>
-            <div className="flex items-center gap-10 pt-2">
-              <div>
-                <p className="font-display text-3xl text-[var(--aw-ink)]">10K+</p>
-                <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--aw-ink-muted)] mt-1">
-                  Athletes
-                </p>
-              </div>
-              <div>
-                <p className="font-display text-3xl text-[var(--aw-ink)]">4.9</p>
-                <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--aw-ink-muted)] mt-1">
-                  Avg. rating
-                </p>
-              </div>
-            </div>
-            <div className="pt-2">
-              <TextLink href={`${basePath}/about`}>Read our story</TextLink>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 5. NEW ARRIVALS ── */}
-      <section className="py-20 lg:py-28 px-6 bg-[var(--aw-secondary)]">
-        <div className="w-full">
-          <div className="flex flex-wrap items-end justify-between gap-6 mb-14">
-            <SectionHead kicker="Just dropped" title="New Arrivals" />
-            <TextLink href={`${basePath}/shop`}>View all</TextLink>
-          </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-10 sm:gap-x-6">
-            {newArrivalsSlice.map((p) => (
-              <ActivewearShopCard key={p.id} product={p} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── 6. FEATURED COLLECTION BANNER ── */}
-      {spotlight && (
-        <section className="py-20 lg:py-28 px-6">
-          <div className="w-full grid md:grid-cols-2 overflow-hidden bg-[var(--aw-secondary)]">
-            <div className="relative min-h-[380px] md:min-h-0 order-1">
+      {/* Community */}
+      <section className="px-5 py-20 sm:px-8 sm:py-24 lg:px-14 lg:py-32">
+        <div className="grid items-center gap-10 md:grid-cols-2 lg:gap-20">
+          <Reveal variant="clip" className="overflow-hidden rounded-2xl">
+            <div className="group relative min-h-[340px] overflow-hidden sm:min-h-[460px] lg:min-h-[560px]">
               <ProductImage
                 preset="banner"
-                src="https://images.unsplash.com/photo-1594381898411-846e7d193883?w=1100&q=85"
-                alt="Exclusive collection"
+                src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1100&h=900&fit=crop&q=85"
+                alt="Everyday style from the Karmalu Originals community"
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-cover"
+                className="object-cover transition-transform duration-[1.6s] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105"
               />
             </div>
-            <div className="order-2 flex flex-col justify-center p-10 md:p-16">
-              <span className="text-[11px] font-medium tracking-[0.3em] uppercase text-[var(--aw-ink-muted)]">
-                Limited edition
-              </span>
-              <h3 className="font-display text-4xl sm:text-5xl leading-[1.02] text-[var(--aw-ink)] mt-4">
-                The Exclusive
-                <br />
-                <span className="italic font-light">Collection</span>
-              </h3>
-              <p className="mt-5 max-w-sm text-[var(--aw-ink-muted)] leading-relaxed text-[15px]">
-                A small-batch capsule in our signature warm neutrals. Crafted in
-                limited quantities — once it&apos;s gone, it&apos;s gone.
+          </Reveal>
+          <div className="flex flex-col items-start">
+            <SectionHeading eyebrow="The Karmalu community" title="Your style. Your everyday." />
+            <Reveal delay={150}>
+              <p className="mt-6 max-w-md text-[15px] leading-relaxed text-[var(--aw-ink-muted)]">
+                Karmalu Originals is made to be part of your life. Wear it your
+                way, share your look, and find inspiration from the community.
               </p>
-              <p className="mt-6 text-[var(--aw-ink)]">
-                {spotlight.name} — <span>{formatNpr(spotlight.price)}</span>
-              </p>
-              <Link
-                href={`${basePath}/product/${spotlight.slug}`}
-                className="mt-8 inline-flex items-center gap-2 self-start px-8 py-4 rounded-full bg-[var(--aw-ink)] text-[var(--aw-bg)] text-[11px] font-medium uppercase tracking-[0.2em] hover:bg-[var(--aw-maroon)] transition-colors"
-              >
-                Shop the drop <ArrowRight size={14} />
-              </Link>
-            </div>
+            </Reveal>
+            <Reveal delay={250} className="mt-8">
+              <SweepLink href={instagramUrl} external>
+                Join us on Instagram
+              </SweepLink>
+            </Reveal>
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
-      {/* ── 7. WHY KARMALU ── */}
-      <section className="py-20 lg:py-28 px-6 bg-[var(--aw-secondary)]">
-        <div className="w-full">
-          <div className="text-center mb-14">
-            <SectionHead kicker="What sets us apart" title="Why Karmalu" align="center" />
-          </div>
-          <div className="grid sm:grid-cols-3 gap-5">
-            {whyKarmalu.map((v) => (
-              <div
-                key={v.title}
-                className="flex flex-col gap-2 p-8 bg-[var(--aw-bg)] rounded-2xl"
-              >
-                <h3 className="font-display text-xl text-[var(--aw-ink)]">{v.title}</h3>
-                <p className="text-sm text-[var(--aw-ink-muted)] leading-relaxed">
-                  {v.body}
+      {/* Instagram */}
+      <section
+        aria-labelledby="instagram-heading"
+        className="bg-[var(--aw-secondary)] px-5 py-20 sm:px-8 sm:py-24 lg:px-14 lg:py-32"
+      >
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-10 flex flex-col items-start justify-between gap-6 sm:mb-14 sm:flex-row sm:items-end">
+            <div>
+              <SectionHeading
+                id="instagram-heading"
+                eyebrow="From our Instagram"
+                title="A little more Karmalu."
+              />
+              <Reveal delay={120}>
+                <p className="mt-4 max-w-md text-sm text-[var(--aw-ink-muted)]">
+                  A few recent posts from our Instagram. Follow along for new
+                  looks, drops and everyday moments.
                 </p>
-              </div>
-            ))}
+              </Reveal>
+            </div>
+            <Reveal delay={200}>
+              <SweepLink href={instagramUrl} external>
+                @karmalu_originals
+              </SweepLink>
+            </Reveal>
           </div>
-        </div>
-      </section>
-
-      {/* ── 8. LIFESTYLE GALLERY ── */}
-      <section className="py-20 lg:py-28">
-        <div className="w-full px-6">
-          <div className="text-center mb-12">
-            <SectionHead kicker="Join the movement" title="#KARMALU" align="center" />
-            <p className="text-[var(--aw-ink-muted)] mt-4 max-w-sm mx-auto text-[15px]">
-              Tag us in your best moments — the finest get featured here.
-            </p>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-            {communityPhotos.map((p) => (
-              <Link
-                key={p.handle}
-                href={`${basePath}/shop`}
-                className="group relative aspect-square overflow-hidden bg-[var(--aw-secondary)]"
+          <div className="flex snap-x gap-4 overflow-x-auto overflow-y-hidden pb-3 md:grid md:grid-cols-3 md:overflow-visible">
+            {instagramPosts.map((post, i) => (
+              <Reveal
+                key={post.url}
+                variant="fade"
+                delay={i * 120}
+                className="w-[min(86vw,360px)] shrink-0 snap-center md:w-full"
               >
-                <ProductImage
-                  preset="card"
-                  src={p.src}
-                  alt={p.handle}
-                  fill
-                  sizes="(max-width: 640px) 50vw, 20vw"
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-end p-3 opacity-0 group-hover:opacity-100">
-                  <span className="text-white text-xs font-medium">{p.handle}</span>
+                <div className="overflow-hidden rounded-2xl border border-[var(--aw-ink)]/10 bg-white transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_20px_50px_-20px_rgba(20,16,15,0.35)]">
+                  <iframe
+                    title={post.title}
+                    src={post.url}
+                    className="h-[670px] w-full"
+                    loading="lazy"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                  />
                 </div>
-              </Link>
+              </Reveal>
             ))}
           </div>
+          <Reveal delay={150} className="mt-8">
+            <a
+              href={instagramUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="group inline-flex min-h-12 items-center justify-center gap-3 rounded-full bg-[var(--aw-ink)] px-8 text-[10px] font-medium uppercase tracking-[0.22em] text-white transition-all duration-300 hover:bg-[var(--aw-maroon)] active:scale-[0.97]"
+            >
+              Follow Karmalu Originals
+              <ArrowRight
+                size={14}
+                className="transition-transform duration-300 group-hover:translate-x-1"
+              />
+            </a>
+          </Reveal>
         </div>
       </section>
 
-      {/* ── 9. CUSTOMER REVIEWS ── */}
-      <section className="py-20 lg:py-28 overflow-hidden bg-[var(--aw-secondary)]">
-        <div className="w-full px-6 text-center mb-14">
-          <SectionHead
-            kicker="Loved by 10,000+"
-            title="Words from our community"
-            align="center"
-          />
-        </div>
+      {/* Newsletter */}
+      <section className="relative isolate overflow-hidden bg-[var(--aw-accent)] px-5 py-24 sm:py-32">
         <div
-          className="marquee-pause flex flex-col gap-5"
-          style={{
-            maskImage:
-              "linear-gradient(to right, transparent, #000 8%, #000 92%, transparent)",
-            WebkitMaskImage:
-              "linear-gradient(to right, transparent, #000 8%, #000 92%, transparent)",
-          }}
-        >
-          <TestimonialRow items={rowA} direction="left" />
-          <TestimonialRow items={rowB} direction="right" />
-        </div>
-      </section>
-
-      {/* ── 10. NEWSLETTER ── */}
-      <section className="py-24 lg:py-32 bg-[var(--aw-accent)]">
-        <div className="max-w-2xl mx-auto px-6 text-center">
-          <span className="text-[11px] font-medium tracking-[0.3em] uppercase text-white/50">
-            Stay in the loop
-          </span>
-          <h2 className="font-display text-white text-4xl sm:text-5xl leading-[1.02] mt-5">
-            Drop alerts &amp;
-            <br />
-            <span className="italic font-light">exclusive offers</span>
-          </h2>
-          <p className="text-white/60 mt-5 leading-relaxed">
-            Be first to know about new arrivals, community events and
-            members-only releases.
-          </p>
-          <NewsletterForm
-            id="activewear-home-email"
-            variant="activewear"
-            className="mt-8 mx-auto"
-          />
-          <p className="text-white/35 text-xs mt-5">No spam. Unsubscribe anytime.</p>
+          aria-hidden
+          className="animate-blob absolute -left-24 top-1/4 -z-10 h-80 w-80 rounded-full bg-[var(--aw-highlight)]/50 blur-3xl sm:h-[28rem] sm:w-[28rem]"
+        />
+        <div
+          aria-hidden
+          className="animate-blob-slow absolute -right-20 bottom-0 -z-10 h-72 w-72 rounded-full bg-[var(--aw-highlight)]/30 blur-3xl sm:h-96 sm:w-96"
+        />
+        <div className="mx-auto max-w-2xl text-center">
+          <Reveal>
+            <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-white/60">
+              Stay in the loop
+            </p>
+            <h2 className="mt-5 font-display text-4xl font-medium leading-[1.02] tracking-[-0.03em] text-white sm:text-6xl">
+              Notes from{" "}
+              <em className="font-serif font-normal italic">Karmalu.</em>
+            </h2>
+          </Reveal>
+          <Reveal delay={120}>
+            <p className="mx-auto mt-5 max-w-md text-sm leading-relaxed text-white/75">
+              Hear about new arrivals, collection updates and more.
+            </p>
+          </Reveal>
+          <Reveal delay={220}>
+            <NewsletterForm
+              id="originals-home-email"
+              variant="originals"
+              className="mx-auto mt-8"
+            />
+          </Reveal>
         </div>
       </section>
     </div>

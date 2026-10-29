@@ -52,17 +52,17 @@ export default function NotFound() {
             Living &amp; Decor
           </Link>
           <Link
-            href="/activewear"
+            href="/originals"
             className="px-7 py-3 rounded-full border border-white/15 text-white text-sm font-bold uppercase tracking-widest hover:border-white/40 transition-colors"
           >
-            Activewear
+            Karmalu Originals
           </Link>
         </div>
       </main>
 
       <footer className="px-6 py-5 flex items-center justify-center border-t border-white/5">
         <p className="text-[9px] font-semibold tracking-[0.3em] uppercase text-white/15">
-          © {new Date().getFullYear()} KARMALU · Two worlds, one soul
+          © {new Date().getFullYear()} KARMALU · Two collections, one soul
         </p>
       </footer>
     </div>

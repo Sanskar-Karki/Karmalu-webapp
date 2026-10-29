@@ -3,21 +3,26 @@
 
 create table if not exists public.orders (
   order_id          text primary key,
-  brand             text not null default 'activewear',
+  brand             text not null default 'originals',
   customer_name     text not null,
   whatsapp_number   text not null,
   email             text,
-  address           jsonb not null,          -- { street, city, state, zip, country }
+  address           jsonb not null,          -- { province, district, municipality, ward, street, country }
   notes             text,
-  items             jsonb not null,          -- [{ name, quantity, price, size?, color? }, ...]
+  items             jsonb not null,          -- [{ productSlug, name, quantity, price, size?, color? }, ...]
   subtotal          numeric(10,2) not null default 0,
   delivery_charge   numeric(10,2) not null default 0,
   total             numeric(10,2) not null,
   delivery_method   text,
   payment_method    text,
-  status            text not null default 'Awaiting WhatsApp Confirmation',
+  status            text not null default 'Pending WhatsApp',
   created_at        timestamptz not null default now()
 );
+alter table public.orders alter column brand set default 'originals';
+alter table public.orders alter column status set default 'Pending WhatsApp';
+update public.orders
+set status = 'Pending WhatsApp'
+where status = 'Awaiting WhatsApp Confirmation';
 
 create index if not exists orders_created_at_idx on public.orders (created_at desc);
 create index if not exists orders_status_idx     on public.orders (status);
@@ -64,7 +69,7 @@ begin
     items, subtotal, delivery_charge, total, delivery_method, payment_method, status
   ) values (
     new_id,
-    coalesce(payload->>'brand', 'activewear'),
+    coalesce(payload->>'brand', 'originals'),
     payload->>'customerName',
     payload->>'whatsappNumber',
     payload->>'email',
@@ -76,7 +81,7 @@ begin
     (payload->>'total')::numeric,
     payload->>'deliveryMethod',
     payload->>'paymentMethod',
-    'Awaiting WhatsApp Confirmation'
+    'Pending WhatsApp'
   );
 
   return new_id;

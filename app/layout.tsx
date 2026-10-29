@@ -35,11 +35,11 @@ export const metadata: Metadata = {
     template: "%s | KARMALU",
   },
   description:
-    "Two worlds, one soul. KARMALU brings you thoughtfully crafted living & decor and performance activewear.",
-  keywords: ["KARMALU", "living decor", "activewear", "home decor", "sportswear"],
+    "Two collections, one soul. KARMALU brings together thoughtful living & decor and everyday clothing from Karmalu Originals.",
+  keywords: ["KARMALU", "living decor", "clothing", "everyday essentials", "home decor"],
   openGraph: {
     title: "KARMALU",
-    description: "Two worlds, one soul.",
+    description: "Two collections, one soul.",
     type: "website",
     locale: "en_US",
   },

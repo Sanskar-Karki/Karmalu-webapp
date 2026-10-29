@@ -7,6 +7,7 @@ import type { Product } from "@/types";
 import { useBrand, useCart, useCartDrawer } from "@/store/BrandProvider";
 import { Heart, Check, Plus, Star } from "@/components/icons";
 import { formatNpr } from "@/lib/currency";
+import { productDiscount } from "@/lib/pricing";
 
 export default function DecorShopCard({ product }: { product: Product }) {
   const { basePath } = useBrand();
@@ -18,9 +19,7 @@ export default function DecorShopCard({ product }: { product: Product }) {
 
   const href = `${basePath}/product/${product.slug}`;
   const hasLifestyle = Boolean(product.hoverImage);
-  const discount = product.oldPrice
-    ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
-    : 0;
+  const discount = productDiscount(product);
 
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -132,8 +131,8 @@ export default function DecorShopCard({ product }: { product: Product }) {
 
         <div className="flex items-baseline gap-2 pt-0.5">
           <span className="text-sm font-semibold text-[var(--color-ink)]">{formatNpr(product.price)}</span>
-          {product.oldPrice && (
-            <span className="text-xs text-[var(--color-ink-muted)] line-through">{formatNpr(product.oldPrice)}</span>
+          {productDiscount(product) > 0 && (
+            <span className="text-xs text-[var(--color-ink-muted)] line-through">{formatNpr(product.oldPrice!)}</span>
           )}
         </div>
       </div>

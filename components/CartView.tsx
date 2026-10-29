@@ -7,16 +7,12 @@ import { useBrand, useCart } from "@/store/BrandProvider";
 import QtyStepper from "@/components/QtyStepper";
 import Button from "@/components/Button";
 import { Trash, ArrowLeft } from "@/components/icons";
-import {
-  formatNpr,
-  FREE_SHIPPING_THRESHOLD,
-  amountToFreeShipping,
-  qualifiesForFreeShipping,
-} from "@/lib/currency";
+import { formatNpr } from "@/lib/currency";
+import CartPerks from "@/components/CartPerks";
 
 export default function CartView() {
   const { basePath, label, brand } = useBrand();
-  const isFullWidth = brand === "activewear";
+  const isFullWidth = brand === "originals";
   const cart = useCart();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -27,12 +23,7 @@ export default function CartView() {
 
   const items = cart.items;
   const subtotal = cart.subtotal();
-  const freeShipping = subtotal === 0 || qualifiesForFreeShipping(subtotal);
-  const shippingKnown = Boolean(cart.shippingMethod);
-  const shipping = freeShipping ? 0 : cart.shippingMethod?.cost ?? 0;
-  const total = subtotal + (shippingKnown ? shipping : 0);
-  const remaining = amountToFreeShipping(subtotal);
-  const progressPct = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
+  const savings = cart.savings();
 
   if (items.length === 0) {
     return (
@@ -90,6 +81,11 @@ export default function CartView() {
                 </Link>
                 <p className="text-sm font-bold text-[var(--color-ink)] mt-auto">
                   {formatNpr(item.price)}
+                  {item.oldPrice && item.oldPrice > item.price && (
+                    <span className="ml-1.5 text-xs font-normal text-[var(--color-ink-muted)] line-through">
+                      {formatNpr(item.oldPrice)}
+                    </span>
+                  )}
                   {(item.size || item.color) && (
                     <span className="ml-1.5 text-xs font-normal text-[var(--color-ink-muted)]">
                       {item.size && `· Size ${item.size}`}
@@ -120,62 +116,26 @@ export default function CartView() {
         <aside className="bg-white rounded-[var(--radius-card)] shadow-[var(--shadow-card)] p-6 flex flex-col gap-4 lg:sticky lg:top-24">
           <h2 className="text-lg font-bold text-[var(--color-ink)]">Order summary</h2>
 
-          {/* Free-shipping progress */}
-          <div className="flex flex-col gap-2 rounded-lg bg-[var(--brand-soft)] px-3 py-2.5">
-            <p className="text-xs text-[var(--color-ink)]">
-              {remaining > 0 ? (
-                <>
-                  You&apos;re{" "}
-                  <span className="font-bold text-[var(--brand)]">
-                    {formatNpr(remaining)}
-                  </span>{" "}
-                  away from <span className="font-semibold">free shipping</span>.
-                </>
-              ) : (
-                <span className="font-semibold text-[var(--brand)]">
-                  🎉 You&apos;ve unlocked free shipping!
-                </span>
-              )}
-            </p>
-            <div
-              className="h-2 w-full overflow-hidden rounded-full bg-[var(--color-ink)]/10"
-              role="progressbar"
-              aria-valuemin={0}
-              aria-valuemax={FREE_SHIPPING_THRESHOLD}
-              aria-valuenow={Math.min(subtotal, FREE_SHIPPING_THRESHOLD)}
-              aria-label="Progress toward free shipping"
-            >
-              <div
-                className="h-full rounded-full bg-[var(--brand)] transition-[width] duration-500 ease-out"
-                style={{ width: `${progressPct}%` }}
-              />
+          <div className="flex flex-col gap-2 text-sm">
+            <div className="flex justify-between gap-4">
+              <span className="text-[var(--color-ink-muted)]">Delivery</span>
+              <span className="text-right text-xs font-semibold text-[var(--color-ink-muted)]">Confirmed on WhatsApp</span>
             </div>
           </div>
 
-          <div className="flex flex-col gap-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-[var(--color-ink-muted)]">Subtotal</span>
-              <span className="font-semibold">{formatNpr(subtotal)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-[var(--color-ink-muted)]">Shipping</span>
-              <span className={`font-semibold ${!shippingKnown ? "text-[var(--color-ink-muted)] italic" : ""}`}>
-                {!shippingKnown
-                  ? "Calculated at next step"
-                  : shipping === 0
-                  ? "Free"
-                  : formatNpr(shipping)}
-              </span>
-            </div>
-          </div>
+          <CartPerks subtotal={subtotal} savings={savings} />
 
           <div className="border-t border-[var(--color-ink)]/8 pt-3 flex justify-between text-base font-bold">
-            <span>Total</span>
-            <span>{formatNpr(total)}</span>
+            <span>Products subtotal</span>
+            <span>{formatNpr(subtotal)}</span>
           </div>
 
+          <p className="text-[11px] leading-5 text-[var(--color-ink-muted)]">
+            Delivery charges are confirmed before your request is accepted.
+          </p>
+
           <Button href={`${basePath}/checkout`} size="lg" fullWidth>
-            Checkout
+            Order request
           </Button>
 
           <Link

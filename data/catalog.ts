@@ -1,37 +1,47 @@
 import type { Brand, Category, Product } from "@/types";
 import { decorProducts, decorCategories } from "./decor";
-import { activewearProducts, activewearCategories } from "./activewear";
+import { originalsProducts, originalsCategories } from "./originals";
 
-export const catalog: Record<
-  Brand,
-  { products: Product[]; categories: Category[] }
-> = {
+/** Plain, serialisable catalogue data (safe to pass from server to client). */
+export type CatalogData = Record<Brand, { products: Product[]; categories: Category[] }>;
+
+/**
+ * The product data that ships with the code. Used as the fallback when the
+ * Supabase catalogue is empty or unreachable, and as the source for
+ * `supabase/catalog_seed.sql`.
+ */
+export const staticCatalogData: CatalogData = {
   decor: { products: decorProducts, categories: decorCategories },
-  activewear: { products: activewearProducts, categories: activewearCategories },
+  originals: { products: originalsProducts, categories: originalsCategories },
 };
 
-export function getProducts(brand: Brand): Product[] {
-  return catalog[brand].products;
+/** Query helpers over a loaded catalogue. */
+export function createCatalog(data: CatalogData) {
+  return {
+    data,
+    getProducts(brand: Brand): Product[] {
+      return data[brand].products;
+    },
+    getCategories(brand: Brand): Category[] {
+      return data[brand].categories;
+    },
+    getCategory(brand: Brand, slug: string): Category | undefined {
+      return data[brand].categories.find((c) => c.slug === slug);
+    },
+    getProductsByCategory(brand: Brand, slug: string): Product[] {
+      return data[brand].products.filter(
+        (p) => p.categorySlug === slug || p.tags?.includes(slug),
+      );
+    },
+    getProduct(brand: Brand, slug: string): Product | undefined {
+      return data[brand].products.find((p) => p.slug === slug);
+    },
+    getRelated(brand: Brand, product: Product, limit = 4): Product[] {
+      return data[brand].products
+        .filter((p) => p.categorySlug === product.categorySlug && p.id !== product.id)
+        .slice(0, limit);
+    },
+  };
 }
 
-export function getCategories(brand: Brand): Category[] {
-  return catalog[brand].categories;
-}
-
-export function getCategory(brand: Brand, slug: string): Category | undefined {
-  return catalog[brand].categories.find((c) => c.slug === slug);
-}
-
-export function getProductsByCategory(brand: Brand, slug: string): Product[] {
-  return catalog[brand].products.filter((p) => p.categorySlug === slug);
-}
-
-export function getProduct(brand: Brand, slug: string): Product | undefined {
-  return catalog[brand].products.find((p) => p.slug === slug);
-}
-
-export function getRelated(brand: Brand, product: Product, limit = 4): Product[] {
-  return catalog[brand].products
-    .filter((p) => p.categorySlug === product.categorySlug && p.id !== product.id)
-    .slice(0, limit);
-}
+export type Catalog = ReturnType<typeof createCatalog>;

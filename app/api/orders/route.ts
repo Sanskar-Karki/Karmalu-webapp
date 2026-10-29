@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { createOrder, isSupabaseConfigured } from "@/lib/orders";
 import { createClient } from "@/utils/supabase/server";
 import type { CreateOrderInput } from "@/types/order";
+import { getCatalog } from "@/lib/catalog-server";
 
 // Orders write to the filesystem (local fallback) / external DB — never static.
 export const dynamic = "force-dynamic";
@@ -19,15 +20,28 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  // ── Server-side validation of required fields ──
+  const brand = body.brand;
+  if (brand !== "originals" && brand !== "decor") {
+    return NextResponse.json(
+      { error: "Invalid brand." },
+      { status: 422 },
+    );
+  }
   const errors: string[] = [];
   if (!isNonEmpty(body.customerName)) errors.push("customerName");
   if (!isNonEmpty(body.whatsappNumber)) errors.push("whatsappNumber");
+  const phoneDigits = isNonEmpty(body.whatsappNumber)
+    ? body.whatsappNumber.replace(/\D/g, "").length
+    : 0;
+  if (phoneDigits < 10 || phoneDigits > 15) errors.push("whatsappNumber");
   const addr = body.address;
   if (
     !addr ||
     !isNonEmpty(addr.street) ||
-    !isNonEmpty(addr.city) ||
+    !isNonEmpty(addr.province) ||
+    !isNonEmpty(addr.district) ||
+    !isNonEmpty(addr.municipality) ||
+    !isNonEmpty(addr.ward) ||
     !isNonEmpty(addr.country)
   ) {
     errors.push("address");
@@ -35,7 +49,6 @@ export async function POST(req: Request) {
   if (!Array.isArray(body.items) || body.items.length === 0) {
     errors.push("items");
   }
-  if (typeof body.total !== "number" || body.total < 0) errors.push("total");
 
   if (errors.length > 0) {
     return NextResponse.json(
@@ -44,6 +57,57 @@ export async function POST(req: Request) {
     );
   }
 
+  const items: CreateOrderInput["items"] = [];
+  for (const [index, requested] of body.items!.entries()) {
+    if (!requested || !isNonEmpty(requested.productSlug)) {
+      errors.push(`items.${index}.productSlug`);
+      continue;
+    }
+    const product = (await getCatalog()).getProduct(brand, requested.productSlug);
+    if (!product) {
+      errors.push(`items.${index}.productSlug`);
+      continue;
+    }
+    if (!Number.isInteger(requested.quantity) || requested.quantity < 1 || requested.quantity > 99) {
+      errors.push(`items.${index}.quantity`);
+      continue;
+    }
+    if (
+      (product.sizes?.length && (!isNonEmpty(requested.size) || !product.sizes.includes(requested.size))) ||
+      (requested.size && !product.sizes?.includes(requested.size))
+    ) {
+      errors.push(`items.${index}.size`);
+      continue;
+    }
+    if (
+      product.colors?.length &&
+      (!isNonEmpty(requested.color) ||
+        !product.colors.some((color) => color.label === requested.color))
+    ) {
+      errors.push(`items.${index}.color`);
+      continue;
+    }
+
+    items.push({
+      productSlug: product.slug,
+      name: product.name,
+      quantity: requested.quantity,
+      price: product.price,
+      size: requested.size,
+      color: product.colors?.length ? requested.color : undefined,
+    });
+  }
+
+  if (errors.length > 0) {
+    return NextResponse.json(
+      { error: "Some product or variant details are invalid. Please check your selections.", fields: errors },
+      { status: 422 },
+    );
+  }
+
+  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const deliveryCharge = 0;
+
   try {
     const supabase = isSupabaseConfigured
       ? createClient(await cookies())
@@ -51,28 +115,23 @@ export async function POST(req: Request) {
 
     const order = await createOrder(
       {
-      brand: body.brand ?? "activewear",
+      brand,
       customerName: body.customerName!.trim(),
       whatsappNumber: body.whatsappNumber!.trim(),
       email: isNonEmpty(body.email) ? body.email.trim() : undefined,
       address: {
         street: addr!.street.trim(),
-        city: addr!.city.trim(),
-        state: (addr!.state ?? "").trim(),
-        zip: (addr!.zip ?? "").trim(),
+        province: addr!.province.trim(),
+        district: addr!.district.trim(),
+        municipality: addr!.municipality.trim(),
+        ward: addr!.ward.trim(),
         country: addr!.country.trim(),
       },
       notes: isNonEmpty(body.notes) ? body.notes.trim() : undefined,
-      items: body.items!.map((i) => ({
-        name: i.name,
-        quantity: i.quantity,
-        price: i.price,
-        size: isNonEmpty(i.size) ? i.size : undefined,
-        color: isNonEmpty(i.color) ? i.color : undefined,
-      })),
-      subtotal: body.subtotal ?? 0,
-      deliveryCharge: body.deliveryCharge ?? 0,
-      total: body.total!,
+      items,
+      subtotal,
+      deliveryCharge,
+      total: subtotal + deliveryCharge,
       deliveryMethod: isNonEmpty(body.deliveryMethod)
         ? body.deliveryMethod
         : undefined,

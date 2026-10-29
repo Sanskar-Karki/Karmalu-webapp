@@ -1,38 +1,42 @@
 import type { MetadataRoute } from "next";
+import { getCatalog } from "@/lib/catalog-server";
+import type { Brand } from "@/types";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://karmalu.com";
 
-const DECOR_CATEGORIES = ["rugs", "cushions", "vases", "wall-art", "lamps"];
-const AW_CATEGORIES = ["women", "men", "accessories"];
+const SHOP_PATH: Record<Brand, string> = { originals: "/originals", decor: "/living-decor" };
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
+  const catalog = await getCatalog();
 
-  const staticRoutes: MetadataRoute.Sitemap = [
+  const pages: MetadataRoute.Sitemap = [
     { url: BASE_URL, lastModified: now, changeFrequency: "weekly", priority: 1 },
-    { url: `${BASE_URL}/living-decor`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
-    { url: `${BASE_URL}/living-decor/about`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
-    { url: `${BASE_URL}/living-decor/faq`, lastModified: now, changeFrequency: "monthly", priority: 0.4 },
-    { url: `${BASE_URL}/living-decor/contact`, lastModified: now, changeFrequency: "monthly", priority: 0.4 },
-    { url: `${BASE_URL}/activewear`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
-    { url: `${BASE_URL}/activewear/about`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
-    { url: `${BASE_URL}/activewear/faq`, lastModified: now, changeFrequency: "monthly", priority: 0.4 },
-    { url: `${BASE_URL}/activewear/contact`, lastModified: now, changeFrequency: "monthly", priority: 0.4 },
   ];
 
-  const decorCategoryRoutes: MetadataRoute.Sitemap = DECOR_CATEGORIES.map((slug) => ({
-    url: `${BASE_URL}/living-decor/${slug}`,
-    lastModified: now,
-    changeFrequency: "weekly",
-    priority: 0.8,
-  }));
+  for (const brand of ["originals", "decor"] as Brand[]) {
+    const base = `${BASE_URL}${SHOP_PATH[brand]}`;
+    pages.push(
+      { url: base, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
+      { url: `${base}/shop`, lastModified: now, changeFrequency: "daily", priority: 0.8 },
+      { url: `${base}/about`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
+      { url: `${base}/faq`, lastModified: now, changeFrequency: "monthly", priority: 0.4 },
+      { url: `${base}/contact`, lastModified: now, changeFrequency: "monthly", priority: 0.4 },
+      ...catalog.getCategories(brand).map(({ slug }) => ({
+        url: `${base}/${slug}`,
+        lastModified: now,
+        changeFrequency: "weekly" as const,
+        priority: 0.8,
+      })),
+      ...catalog.getProducts(brand).map((p) => ({
+        url: `${base}/product/${p.slug}`,
+        lastModified: now,
+        changeFrequency: "weekly" as const,
+        priority: 0.7,
+        images: p.image && p.image.startsWith("http") ? [p.image] : p.image ? [`${BASE_URL}${p.image}`] : undefined,
+      })),
+    );
+  }
 
-  const awCategoryRoutes: MetadataRoute.Sitemap = AW_CATEGORIES.map((slug) => ({
-    url: `${BASE_URL}/activewear/${slug}`,
-    lastModified: now,
-    changeFrequency: "weekly",
-    priority: 0.8,
-  }));
-
-  return [...staticRoutes, ...decorCategoryRoutes, ...awCategoryRoutes];
+  return pages;
 }

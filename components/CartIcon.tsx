@@ -4,7 +4,7 @@ import { useCart, useCartDrawer } from "@/store/BrandProvider";
 import { Cart } from "@/components/icons";
 import { useEffect, useState } from "react";
 
-export default function CartIcon() {
+export default function CartIcon({ className = "" }: { className?: string }) {
   const cart = useCart();
   const { openDrawer } = useCartDrawer();
   const [mounted, setMounted] = useState(false);
@@ -17,7 +17,7 @@ export default function CartIcon() {
     <button
       onClick={openDrawer}
       aria-label="Open cart"
-      className="relative inline-flex items-center justify-center w-10 h-10 rounded-full text-[var(--color-ink)] hover:bg-[var(--brand-soft)] hover:text-[var(--brand)] transition-colors"
+      className={`relative inline-flex items-center justify-center w-10 h-10 rounded-full text-[var(--color-ink)] hover:bg-[var(--brand-soft)] hover:text-[var(--brand)] transition-colors ${className}`}
     >
       <Cart size={20} />
       {count > 0 && (

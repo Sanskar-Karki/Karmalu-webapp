@@ -1,12 +1,13 @@
-import type { Brand, Product } from "@/types";
-import { getRelated } from "@/data/catalog";
+import type { Brand, Product, ProductMedia } from "@/types";
+import { getCatalog } from "@/lib/catalog-server";
 import ProductImage from "@/components/ProductImage";
 import Link from "next/link";
-import ProductGallery from "@/components/ProductGallery";
+import ProductScrollStage from "@/components/ProductScrollStage";
 import ProductActions from "@/components/ProductActions";
 import ProductTabs from "@/components/ProductTabs";
-import { Star } from "@/components/icons";
+import { ArrowLeft } from "@/components/icons";
 import { formatNpr } from "@/lib/currency";
+import { productDiscount } from "@/lib/pricing";
 
 /* ── "Wear it with" product tile (server-safe) ── */
 function WearWithCard({
@@ -19,32 +20,58 @@ function WearWithCard({
   return (
     <Link
       href={`${basePath}/product/${product.slug}`}
-      className="group flex flex-col gap-2 shrink-0 w-44 sm:w-52"
+      className="group flex w-44 shrink-0 flex-col gap-3 sm:w-56"
     >
-      <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-[var(--color-beige)]">
+      <div className="relative aspect-[4/5] overflow-hidden bg-[var(--aw-secondary)]">
         <ProductImage
           preset="card"
           src={product.image}
           alt={product.name}
           fill
-          sizes="208px"
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
+          sizes="224px"
+          className="object-cover transition-transform duration-700 group-hover:scale-105"
         />
       </div>
       <div>
-        <p className="text-[10px] text-[var(--color-ink-muted)] uppercase tracking-widest font-semibold">
+        <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--aw-ink-muted)]">
           {product.category}
         </p>
-        <p className="text-sm font-semibold text-[var(--color-ink)] leading-snug group-hover:text-[var(--brand)] transition-colors line-clamp-2">
+        <p className="mt-1 line-clamp-2 font-display text-sm leading-snug text-[var(--aw-ink)] transition-colors group-hover:text-[var(--aw-maroon)]">
           {product.name}
         </p>
-        <p className="text-sm font-bold text-[var(--color-ink)] mt-0.5">{formatNpr(product.price)}</p>
+        <p className="mt-0.5 text-sm text-[var(--aw-ink)]">{formatNpr(product.price)}</p>
       </div>
     </Link>
   );
 }
 
-export default function ProductDetail({
+function Price({ product, discount }: { product: Product; discount: number }) {
+  return (
+    <div className="flex items-baseline gap-2.5">
+      <span className="text-xl font-medium tracking-tight text-[var(--aw-ink)]">
+        {formatNpr(product.price)}
+      </span>
+      {productDiscount(product) > 0 && (
+        <>
+          <span className="text-sm text-[var(--aw-ink-muted)] line-through">
+            {formatNpr(product.oldPrice!)}
+          </span>
+          <span className="bg-[var(--aw-highlight)] px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-white">
+            -{discount}%
+          </span>
+        </>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Editorial three-column product page (Originals):
+ * description on the left, a scrolling photo stack in the middle and
+ * sizing / add to bag on the right. The whole stage pins while scrolling
+ * slides the photos in place. Below lg: gallery → info → actions.
+ */
+export default async function ProductDetail({
   product,
   basePath,
   brand,
@@ -53,122 +80,153 @@ export default function ProductDetail({
   basePath: string;
   brand: Brand;
 }) {
+  const { getRelated } = await getCatalog();
   const related = getRelated(brand, product);
-  const discount = product.oldPrice
-    ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
-    : 0;
+  const discount = productDiscount(product);
+  // Photos and videos in admin order; built-in products only have photos.
+  const images: ProductMedia[] = product.media?.length
+    ? product.media
+    : (product.gallery.length > 0 ? product.gallery : [product.image]).filter(Boolean).map((url) => ({ url, type: "image" as const }));
+  const productSchema = JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description,
+    image: product.gallery,
+    category: product.category,
+    brand: { "@type": "Brand", name: "KARMALU" },
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "NPR",
+      price: product.price,
+    },
+  }).replace(/</g, "\\u003c");
+
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className="bg-[var(--aw-bg)]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: productSchema }}
+      />
 
-      {/* ── Breadcrumb ── */}
-      <div className="border-b border-[var(--color-ink)]/6 bg-white">
-        <nav className="w-full px-6 h-10 flex items-center gap-1.5 text-[11px] text-[var(--color-ink-muted)]">
-          <Link href={basePath} className="hover:text-[var(--color-ink)] transition-colors">Home</Link>
-          <span>/</span>
-          <Link href={`${basePath}/${product.categorySlug}`} className="hover:text-[var(--color-ink)] transition-colors">
-            {product.category}
-          </Link>
-          <span>/</span>
-          <span className="text-[var(--color-ink)] font-medium">{product.name}</span>
-        </nav>
-      </div>
+      <div>
+      <ProductScrollStage
+        images={images}
+        name={product.name}
+        info={
+        <section className="px-5 pt-7 sm:px-8 lg:px-10 lg:py-10 xl:px-14">
+          <div className="rise-in">
+            <Link
+              href={`${basePath}/${product.categorySlug}`}
+              className="group inline-flex items-center gap-1.5 text-[11px] text-[var(--aw-ink-muted)] transition-colors hover:text-[var(--aw-ink)]"
+            >
+              <ArrowLeft size={12} className="transition-transform group-hover:-translate-x-0.5" />
+              Back to {product.category}
+            </Link>
 
-      {/* ── Main grid: gallery + info ── */}
-      <div className="w-full px-4 sm:px-6 py-8">
-        <div className="grid lg:grid-cols-2 gap-10 xl:gap-16 items-start">
-
-          {/* Gallery */}
-          <ProductGallery images={product.gallery} name={product.name} fitViewport />
-
-          {/* Info panel */}
-          <div className="flex flex-col gap-5 lg:sticky lg:top-24">
-
-            {/* Title + price */}
-            <div className="flex flex-col gap-3 pb-4 border-b border-[var(--color-ink)]/8">
+            <div className="mt-6 flex items-center gap-3 lg:mt-8">
+              <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-[var(--aw-ink-muted)]">
+                Karmalu Originals
+              </p>
               {product.badge && (
-                <span className="self-start px-2.5 py-1 rounded-full bg-[var(--brand)]/10 text-[var(--brand)] text-[10px] font-bold uppercase tracking-widest">
+                <span className="border border-[var(--aw-ink)]/15 px-2 py-0.5 text-[9px] font-medium uppercase tracking-[0.18em] text-[var(--aw-ink)]">
                   {product.badge}
                 </span>
               )}
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-[var(--color-ink)] tracking-tight leading-tight">
-                {product.name}
-              </h1>
-
-              {/* Price */}
-              <div className="flex items-baseline gap-3">
-                <span className="text-2xl font-extrabold text-[var(--color-ink)]">
-                  {formatNpr(product.price)}
-                </span>
-                {product.oldPrice && (
-                  <>
-                    <span className="text-base text-[var(--color-ink-muted)] line-through">
-                      {formatNpr(product.oldPrice)}
-                    </span>
-                    <span className="text-sm font-bold text-red-500">
-                      {discount}% off
-                    </span>
-                  </>
-                )}
-              </div>
-
-              {/* Rating */}
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-0.5 text-[var(--brand)]">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star
-                      key={i}
-                      size={14}
-                      className={i < Math.round(product.rating) ? "" : "opacity-20"}
-                    />
-                  ))}
-                </div>
-                <span className="text-xs text-[var(--color-ink-muted)]">
-                  {product.rating} ({product.reviews} reviews)
-                </span>
-              </div>
             </div>
 
-            {/* Description snippet */}
-            <p className="text-sm text-[var(--color-ink-muted)] leading-relaxed">
+            <h1 className="mt-3 max-w-sm font-display text-[1.75rem] font-medium leading-[1.08] tracking-[-0.025em] text-[var(--aw-ink)] xl:text-[2rem]">
+              {product.name}
+            </h1>
+
+            <div className="mt-4 lg:hidden">
+              <Price product={product} discount={discount} />
+            </div>
+
+            <p className="mt-5 max-w-sm text-[13px] leading-6 text-[var(--aw-ink-muted)]">
               {product.description}
             </p>
 
-            {/* Actions: colour, size, add to bag */}
-            <ProductActions product={product} />
+            {product.details.length > 0 && (
+              <ul className="mt-6 flex max-w-sm flex-col gap-2 border-t border-[var(--aw-ink)]/10 pt-5">
+                {product.details.map((d) => (
+                  <li key={d} className="flex items-start gap-2.5 text-[12px] leading-5 text-[var(--aw-ink-muted)]">
+                    <span className="mt-2 h-px w-3 shrink-0 bg-[var(--aw-ink)]/40" />
+                    {d}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
-        </div>
+        </section>
+        }
+        actions={
+        <section
+          aria-label="Choose options"
+          className="px-5 pt-8 sm:px-8 lg:flex lg:flex-col lg:px-10 lg:py-10 xl:px-14"
+        >
+          <div className="rise-in rise-in-2 w-full lg:max-w-xs lg:self-end">
+            <div className="hidden lg:block">
+              <Price product={product} discount={discount} />
+              <p className="mt-1 text-[11px] text-[var(--aw-ink-muted)]">
+                Delivery cost is confirmed with your order.
+              </p>
+            </div>
+
+            <div className="lg:mt-7">
+              <ProductActions product={product} />
+            </div>
+
+            <ol className="mt-7 flex flex-col gap-2 border-t border-[var(--aw-ink)]/10 pt-5 text-[11px] leading-5 text-[var(--aw-ink-muted)]">
+              {[
+                "Choose your colour and size",
+                "Send your order request via WhatsApp",
+                "Our team confirms the details",
+              ].map((stepText, i) => (
+                <li key={stepText} className="flex gap-3">
+                  <span className="tabular-nums text-[var(--aw-ink)]">0{i + 1}</span>
+                  {stepText}
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+        }
+      />
       </div>
 
-      {/* ── Tabs: Description / Delivery & Returns / Care ── */}
-      <div className="w-full px-4 sm:px-6">
+      <section className="border-t border-[var(--aw-ink)]/10 px-5 sm:px-8 lg:px-14">
         <ProductTabs product={product} />
-      </div>
+      </section>
 
-      {/* ── Wear it with / Recently viewed ── */}
       {related.length > 0 && (
-        <div className="border-t border-[var(--color-ink)]/8 mt-12">
-          <div className="w-full px-4 sm:px-6 py-12">
-            <div className="flex items-center justify-between mb-7">
-              <h2 className="text-lg font-extrabold uppercase tracking-widest text-[var(--color-ink)]">
-                Wear it with
-              </h2>
+        <section className="border-t border-[var(--aw-ink)]/10 bg-[var(--aw-secondary)]">
+          <div className="px-5 py-14 sm:px-8 lg:px-14 lg:py-20">
+            <div className="mb-8 flex items-end justify-between">
+              <div>
+                <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-[var(--aw-ink-muted)]">
+                  Styled together
+                </p>
+                <h2 className="mt-2 font-display text-2xl font-medium tracking-[-0.02em] text-[var(--aw-ink)] sm:text-3xl">
+                  Complete the look
+                </h2>
+              </div>
               <Link
                 href={`${basePath}/${product.categorySlug}`}
-                className="text-xs font-semibold uppercase tracking-widest text-[var(--color-ink-muted)] hover:text-[var(--brand)] underline underline-offset-2 transition-colors"
+                className="hidden text-[10px] font-medium uppercase tracking-[0.18em] text-[var(--aw-ink)] underline underline-offset-4 sm:block"
               >
-                View all
+                Explore the collection
               </Link>
             </div>
-            <div className="flex gap-5 overflow-x-auto no-scrollbar pb-2">
+            <div className="no-scrollbar flex gap-5 overflow-x-auto pb-2">
               {related.map((p) => (
                 <WearWithCard key={p.id} product={p} basePath={basePath} />
               ))}
             </div>
           </div>
-        </div>
+        </section>
       )}
-
     </div>
   );
 }

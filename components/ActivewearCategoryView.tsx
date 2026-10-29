@@ -4,12 +4,13 @@ import ProductImage from "@/components/ProductImage";
 import Link from "next/link";
 import { useState, useMemo, useEffect, useRef } from "react";
 import type { Category, Product } from "@/types";
-import { getCategories, getProducts } from "@/data/catalog";
+import { useCatalog } from "@/store/CatalogProvider";
+import { isOnSale } from "@/lib/pricing";
 import ActivewearShopCard from "@/components/ActivewearShopCard";
 import { Search, ArrowRight, ArrowLeft, GridSmall, GridMedium, GridDense, Check } from "@/components/icons";
 import { formatNpr } from "@/lib/currency";
 
-const basePath = "/activewear";
+const basePath = "/originals";
 const PAGE_SIZE_OPTIONS = [8, 12, 16, 24] as const;
 
 const GRID_COLS = {
@@ -208,8 +209,9 @@ export default function ActivewearCategoryView({
   category: Category;
   defaultFilter?: string;
 }) {
-  const allProducts = getProducts("activewear");
-  const allCategories = getCategories("activewear");
+  const { getProducts, getCategories } = useCatalog();
+  const allProducts = getProducts("originals");
+  const allCategories = getCategories("originals");
 
   /* ── Filter state ── */
   type BadgeFilter = "new" | "bestseller" | "sale";
@@ -225,7 +227,7 @@ export default function ActivewearCategoryView({
 
   /* ── Base list: current category (or all products on the shop-all page) ── */
   const baseProducts = useMemo(
-    () => (defaultFilter === "all" ? allProducts : allProducts.filter((p) => p.categorySlug === category.slug)),
+    () => (defaultFilter === "all" ? allProducts : allProducts.filter((p) => p.categorySlug === category.slug || p.tags?.includes(category.slug))),
     [allProducts, defaultFilter, category.slug],
   );
 
@@ -241,7 +243,7 @@ export default function ActivewearCategoryView({
     const bySlug: Record<string, number> = {};
     bySlug["new"] = baseProducts.filter((p) => p.badge === "New").length;
     bySlug["bestseller"] = baseProducts.filter((p) => p.badge === "Bestseller").length;
-    bySlug["sale"] = baseProducts.filter((p) => p.badge === "Sale" || (p.oldPrice ?? 0) > 0).length;
+    bySlug["sale"] = baseProducts.filter(isOnSale).length;
     allSizes.forEach((s) => {
       bySlug[`size:${s}`] = baseProducts.filter((p) => p.sizes?.includes(s)).length;
     });
@@ -253,7 +255,8 @@ export default function ActivewearCategoryView({
   const toggleBadge = (key: BadgeFilter) => {
     setActiveBadges((prev) => {
       const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
     setPage(1);
@@ -263,7 +266,8 @@ export default function ActivewearCategoryView({
   const toggleSize = (size: string) => {
     setActiveSizes((prev) => {
       const next = new Set(prev);
-      next.has(size) ? next.delete(size) : next.add(size);
+      if (next.has(size)) next.delete(size);
+      else next.add(size);
       return next;
     });
     setPage(1);
@@ -278,7 +282,7 @@ export default function ActivewearCategoryView({
       list = list.filter((p) => {
         if (activeBadges.has("new") && p.badge === "New") return true;
         if (activeBadges.has("bestseller") && p.badge === "Bestseller") return true;
-        if (activeBadges.has("sale") && (p.badge === "Sale" || (p.oldPrice ?? 0) > 0)) return true;
+        if (activeBadges.has("sale") && isOnSale(p)) return true;
         return false;
       });
     }
@@ -288,7 +292,7 @@ export default function ActivewearCategoryView({
     }
 
     if (search.trim()) {
-      const q = search.toLowerCase();
+      const q = search.trim().toLowerCase();
       list = list.filter((p) => p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q));
     }
 
@@ -318,7 +322,7 @@ export default function ActivewearCategoryView({
   /* ── Recommendations: when viewing all, show featured; otherwise show cross-category ── */
   const recommendations = (defaultFilter === "all"
     ? allProducts.filter((p) => p.badge)
-    : allProducts.filter((p) => p.categorySlug !== category.slug)
+    : allProducts.filter((p) => p.categorySlug !== category.slug && !p.tags?.includes(category.slug))
   ).slice(0, 5);
 
   const badgeItems: { key: BadgeFilter; label: string }[] = [
@@ -436,6 +440,25 @@ export default function ActivewearCategoryView({
         {/* Right column */}
         <div className="flex-1 min-w-0">
 
+          {/* Search */}
+          <div className="relative mb-4">
+            <Search
+              size={16}
+              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--aw-ink-muted)]"
+            />
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              placeholder="Search products…"
+              aria-label="Search products"
+              className="w-full rounded-full border border-[var(--aw-ink)]/12 bg-[var(--aw-bg)] py-3 pl-11 pr-4 text-sm text-[var(--aw-ink)] outline-none transition placeholder:text-[var(--aw-ink-muted)] focus:border-[var(--aw-ink)]/40 lg:max-w-sm"
+            />
+          </div>
+
           {/* Mobile: filter pills + sort row */}
           <div className="lg:hidden mb-4 flex flex-wrap gap-2 items-center">
             <button
@@ -497,7 +520,7 @@ export default function ActivewearCategoryView({
           {/* Sort + result count bar (desktop) */}
           <div className="hidden lg:flex items-center justify-between mb-6 gap-4">
             <p className="text-sm text-[var(--aw-ink-muted)] shrink-0">
-              Showing <span className="font-bold text-[var(--aw-ink)]">{(safePage - 1) * pageSize + 1}–{Math.min(safePage * pageSize, filtered.length)}</span> of{" "}
+              Showing <span className="font-bold text-[var(--aw-ink)]">{filtered.length === 0 ? 0 : (safePage - 1) * pageSize + 1}–{Math.min(safePage * pageSize, filtered.length)}</span> of{" "}
               <span className="font-bold text-[var(--aw-ink)]">{filtered.length}</span> results
             </p>
 
@@ -541,8 +564,27 @@ export default function ActivewearCategoryView({
           {paginated.length === 0 ? (
             <div className="text-center py-24 text-[var(--aw-ink)]/40">
               <p className="text-5xl mb-4">✦</p>
-              <p className="font-semibold text-lg">No products found</p>
-              <p className="text-sm mt-1">Try adjusting your search or filters</p>
+              {baseProducts.length === 0 && defaultFilter !== "all" ? (
+                <>
+                  <p className="font-semibold text-lg">
+                    {category.name} coming soon
+                  </p>
+                  <p className="text-sm mt-1">
+                    Explore the rest of the Karmalu Originals collection in the meantime.
+                  </p>
+                  <Link
+                    href={`${basePath}/shop`}
+                    className="mt-5 inline-flex items-center justify-center rounded-full bg-[var(--aw-ink)] px-6 py-3 text-xs font-semibold uppercase tracking-widest text-[var(--aw-bg)] transition-colors hover:bg-[var(--aw-highlight)]"
+                  >
+                    Shop all
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <p className="font-semibold text-lg">No products found</p>
+                  <p className="text-sm mt-1">Try adjusting your search or filters</p>
+                </>
+              )}
             </div>
           ) : (
             <div className={`grid ${GRID_COLS[cols]} gap-4 sm:gap-5`}>
@@ -640,8 +682,8 @@ export default function ActivewearCategoryView({
             </div>
           </div>
           <div className="text-[var(--aw-bg)]/60 text-sm leading-relaxed">
-            <p className="font-bold text-[var(--aw-bg)] mb-2">Made for Movers and Makers</p>
-            We believe the best clothes disappear when you wear them. Obsessively engineered for performance — from the studio to the street, the trail to the table.
+            <p className="font-bold text-[var(--aw-bg)] mb-2">Made for everyday life</p>
+            We believe the best clothes feel easy to wear. Thoughtful pieces for the everyday, from the first plan to the last.
           </div>
         </div>
       </section>

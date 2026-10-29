@@ -4,9 +4,10 @@ import ProductImage from "@/components/ProductImage";
 import { useEffect, useState } from "react";
 import { useBrand, useCart } from "@/store/BrandProvider";
 import Button from "@/components/Button";
-import { Check, Lock, ArrowLeft, ArrowRight, Truck, WhatsApp } from "@/components/icons";
+import { Check, ArrowLeft, ArrowRight, WhatsApp } from "@/components/icons";
 import Link from "next/link";
-import { formatNpr, qualifiesForFreeShipping } from "@/lib/currency";
+import { formatNpr, FREE_SHIPPING_THRESHOLD, qualifiesForFreeShipping } from "@/lib/currency";
+import type { OrderItem } from "@/types/order";
 
 /* ── helpers ── */
 const field =
@@ -21,11 +22,10 @@ function Label({ children }: { children: React.ReactNode }) {
 }
 
 /* ── Step indicator ── */
-const STEPS = ["Contact", "Shipping", "Review"];
+const STEPS = ["Contact", "Delivery", "Review"];
 
 /* ── WhatsApp order destination (Nepal). Override via env. ── */
-const WHATSAPP_NUMBER =
-  process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "9779803182768"; // +977 98031 82768
+const WHATSAPP_NUMBER = (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "").replace(/\D/g, "");
 
 /* Count digits in a phone string (ignores spaces, +, -, etc.) */
 const phoneDigits = (v: string) => v.replace(/\D/g, "").length;
@@ -68,10 +68,14 @@ function StepBar({ current }: { current: number }) {
   );
 }
 
-/* ── Shipping methods (location-based flat rates) ── */
+/* Delivery details and fees are confirmed with the customer before the request is accepted. */
 const SHIPPING_METHODS = [
-  { id: "inside-ktm", label: "Inside Kathmandu Valley", detail: "1 business days", price: 100 },
-  { id: "outside-ktm", label: "Outside Kathmandu Valley", detail: "2–3 business days", price: 165 },
+  {
+    id: "confirm-on-whatsapp",
+    label: "Confirm delivery over WhatsApp",
+    detail: "Coverage, timing and any delivery charge are confirmed before acceptance.",
+    price: 0,
+  },
 ] as const;
 type ShippingId = (typeof SHIPPING_METHODS)[number]["id"];
 
@@ -79,25 +83,13 @@ type ShippingId = (typeof SHIPPING_METHODS)[number]["id"];
 function OrderSummary({
   subtotal,
   shippingCost,
-  shippingKnown,
-  discount,
-  promoCode,
-  setPromoCode,
-  onApplyPromo,
-  promoApplied,
 }: {
   subtotal: number;
   shippingCost: number;
-  shippingKnown: boolean;
-  discount: number;
-  promoCode: string;
-  setPromoCode: (v: string) => void;
-  onApplyPromo: () => void;
-  promoApplied: boolean;
 }) {
   const cart = useCart();
   const items = cart.items;
-  const total = subtotal - discount + (shippingKnown ? shippingCost : 0);
+  const total = subtotal + shippingCost;
 
   return (
     <aside className="bg-white rounded-2xl border border-[var(--color-ink)]/8 shadow-sm p-6 flex flex-col gap-5 lg:sticky lg:top-24">
@@ -128,58 +120,30 @@ function OrderSummary({
         ))}
       </ul>
 
-      {/* Promo code */}
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={promoCode}
-          onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-          placeholder="Promo code"
-          className="flex-1 px-3 py-2.5 rounded-xl border border-[var(--color-ink)]/15 bg-[var(--color-beige)]/50 text-sm text-[var(--color-ink)] placeholder:text-[var(--color-ink)]/35 outline-none focus:ring-2 focus:ring-[var(--brand)]/40 transition"
-        />
-        <button
-          onClick={onApplyPromo}
-          className="px-4 py-2.5 rounded-xl bg-[var(--brand)] text-white text-sm font-bold hover:bg-[var(--brand-dark)] transition-colors"
-        >
-          Apply
-        </button>
-      </div>
-      {promoApplied && (
-        <p className="text-xs text-green-600 font-semibold -mt-3">
-          ✓ Promo applied — 10% off!
-        </p>
-      )}
-
       {/* Totals */}
       <div className="border-t border-[var(--color-ink)]/8 pt-4 flex flex-col gap-2 text-sm">
-        <div className="flex justify-between">
-          <span className="text-[var(--color-ink-muted)]">Subtotal</span>
-          <span className="font-semibold">{formatNpr(subtotal)}</span>
-        </div>
-        {discount > 0 && (
-          <div className="flex justify-between text-green-600">
-            <span>Promo discount</span>
-            <span className="font-semibold">−{formatNpr(discount)}</span>
-          </div>
-        )}
-        <div className="flex justify-between">
-          <span className="text-[var(--color-ink-muted)]">Shipping</span>
-          <span className={`font-semibold ${!shippingKnown ? "text-[var(--color-ink-muted)] italic" : ""}`}>
-            {!shippingKnown
-              ? "Calculated at next step"
-              : shippingCost === 0
-              ? "Free"
-              : formatNpr(shippingCost)}
-          </span>
+        <div className="flex justify-between gap-4">
+          <span className="text-[var(--color-ink-muted)]">Delivery</span>
+          {qualifiesForFreeShipping(subtotal) ? (
+            <span className="text-right font-semibold text-emerald-700">Free</span>
+          ) : (
+            <span className="text-right font-semibold text-[var(--color-ink-muted)]">
+              Confirmed on WhatsApp
+            </span>
+          )}
         </div>
         <div className="flex justify-between text-base font-extrabold pt-2 border-t border-[var(--color-ink)]/8">
-          <span>Total</span>
+          <span>Products subtotal</span>
           <span className="text-[var(--brand)]">{formatNpr(total)}</span>
         </div>
       </div>
 
-      <div className="flex items-center justify-center gap-1.5 text-[11px] text-[var(--color-ink)]/40 font-medium">
-        <Lock size={12} /> Secure 256-bit SSL encryption
+      <p className="text-[11px] leading-5 text-[var(--color-ink-muted)]">
+        Delivery charges are not included in this subtotal. The team will confirm the final amount before accepting your request.
+      </p>
+
+      <div className="text-center text-[11px] leading-5 text-[var(--color-ink-muted)]">
+        Your request is saved before WhatsApp opens. It is not confirmed until our team replies.
       </div>
     </aside>
   );
@@ -192,13 +156,26 @@ function OrderConfirmation({
   items,
   total,
   whatsappUrl,
+  whatsappMessage,
 }: {
   basePath: string;
   orderNumber: string;
   items: ReturnType<typeof useCart>["items"];
   total: number;
   whatsappUrl: string;
+  whatsappMessage: string;
 }) {
+  const [copyStatus, setCopyStatus] = useState("");
+
+  const copyOrderDetails = async () => {
+    try {
+      await navigator.clipboard.writeText(whatsappMessage);
+      setCopyStatus("Order details copied.");
+    } catch {
+      setCopyStatus("Copy is unavailable in this browser. Use Open WhatsApp again instead.");
+    }
+  };
+
   return (
     <div className="max-w-2xl mx-auto px-6 py-16 flex flex-col items-center gap-8">
       {/* Success ring */}
@@ -211,13 +188,13 @@ function OrderConfirmation({
 
       <div className="text-center">
         <p className="text-xs font-bold tracking-[0.3em] uppercase text-[var(--brand)] mb-2">
-          Order Recorded
+          Request Saved · Pending WhatsApp
         </p>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-[var(--color-ink)]">
           Thank you!
         </h1>
         <p className="text-[var(--color-ink-muted)] mt-3">
-          Your order has been recorded successfully.
+          Your request is saved, but your order is not confirmed yet.
         </p>
         <p className="mt-2 text-sm text-[var(--color-ink-muted)]">
           Order ID:{" "}
@@ -229,9 +206,7 @@ function OrderConfirmation({
           <span className="font-semibold text-[var(--color-ink)]">
             One last step:
           </span>{" "}
-          press <span className="font-semibold">Send</span> in the WhatsApp
-          window that just opened to complete your order. We&apos;ll confirm and
-          arrange delivery there.
+          open WhatsApp and press <span className="font-semibold">Send</span> to share your request. Our team will review it and confirm availability, delivery and the final amount with you. Opening WhatsApp does not send or confirm the request.
         </p>
 
         {/* Fallback link in case the WhatsApp tab was blocked */}
@@ -241,14 +216,22 @@ function OrderConfirmation({
           rel="noopener noreferrer"
           className="mt-5 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#25D366] text-white text-sm font-bold hover:bg-[#1da851] transition-colors"
         >
-          <WhatsApp size={16} /> Open WhatsApp again
+          <WhatsApp size={16} /> Continue to WhatsApp
         </a>
+        <button
+          type="button"
+          onClick={copyOrderDetails}
+          className="mt-3 inline-flex items-center justify-center rounded-full border border-[var(--color-ink)]/15 px-5 py-2.5 text-sm font-semibold text-[var(--color-ink)] transition-colors hover:bg-[var(--color-ink)]/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+        >
+          Copy order details
+        </button>
+        <p aria-live="polite" className="mt-2 min-h-4 text-xs text-[var(--color-ink-muted)]">{copyStatus}</p>
       </div>
 
 
       {/* Items recap */}
       <div className="w-full bg-white rounded-2xl border border-[var(--color-ink)]/8 p-6">
-        <h2 className="font-bold text-sm text-[var(--color-ink)] mb-4">Items Ordered</h2>
+        <h2 className="font-bold text-sm text-[var(--color-ink)] mb-4">Items in this request</h2>
         <ul className="flex flex-col divide-y divide-[var(--color-ink)]/6">
           {items.map((item) => (
             <li key={item.id} className="flex items-center gap-3 py-3">
@@ -268,9 +251,12 @@ function OrderConfirmation({
           ))}
         </ul>
         <div className="flex justify-between text-base font-extrabold pt-4 border-t border-[var(--color-ink)]/8 mt-2">
-          <span>Order total</span>
+          <span>Products subtotal</span>
           <span className="text-[var(--brand)]">{formatNpr(total)}</span>
         </div>
+        <p className="mt-2 text-xs leading-5 text-[var(--color-ink-muted)]">
+          Delivery charges and the final amount will be confirmed by the team on WhatsApp.
+        </p>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3 w-full">
@@ -282,8 +268,8 @@ function OrderConfirmation({
         </Button>
       </div>
 
-      <p className="text-xs text-[var(--color-ink)]/30 text-center">
-        Payment is arranged directly over WhatsApp after we confirm your order.
+      <p className="text-xs text-[var(--color-ink-muted)] text-center">
+        This is a pending order request, not a completed checkout.
       </p>
     </div>
   );
@@ -294,29 +280,27 @@ function OrderConfirmation({
 ══════════════════════════════════════════ */
 export default function CheckoutView() {
   const { basePath, brand } = useBrand();
-  const isFullWidth = brand === "activewear";
+  const isFullWidth = brand === "originals";
   const cart = useCart();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  /* steps: 0 = Contact, 1 = Shipping, 2 = Payment, 3 = Confirmed */
+  /* steps: 0 = Contact, 1 = Delivery, 2 = Review, 3 = Request saved */
   const [step, setStep] = useState(0);
 
   /* form state */
-  const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [address, setAddress] = useState("");
-  const [city, setCity] = useState("");
-  const [state, setState] = useState("");
-  const [zip, setZip] = useState("");
-  const [country, setCountry] = useState("US");
-  const [shippingMethod, setShippingMethod] = useState<ShippingId>("inside-ktm");
+  const [province, setProvince] = useState("");
+  const [district, setDistrict] = useState("");
+  const [municipality, setMunicipality] = useState("");
+  const [ward, setWard] = useState("");
+  const [shippingMethod, setShippingMethod] = useState<ShippingId>("confirm-on-whatsapp");
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
-  const [promoCode, setPromoCode] = useState("");
-  const [promoApplied, setPromoApplied] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
   const [whatsappUrl, setWhatsappUrl] = useState("");
+  const [whatsappMessage, setWhatsappMessage] = useState("");
   const [placedItems, setPlacedItems] = useState<ReturnType<typeof useCart>["items"]>([]);
   const [placedTotal, setPlacedTotal] = useState(0);
   const [submitting, setSubmitting] = useState(false);
@@ -327,13 +311,7 @@ export default function CheckoutView() {
   const items = cart.items;
   const subtotal = cart.subtotal();
   const selectedMethod = SHIPPING_METHODS.find((m) => m.id === shippingMethod)!;
-  // Free shipping once the subtotal reaches the threshold; otherwise the
-  // location-based flat rate applies.
-  const shippingCost = qualifiesForFreeShipping(subtotal)
-    ? 0
-    : selectedMethod.price;
-  const discount = promoApplied ? subtotal * 0.1 : 0;
-  const total = subtotal - discount + shippingCost;
+  const shippingCost = selectedMethod.price;
 
   /* empty cart guard */
   if (items.length === 0 && step < 3) {
@@ -356,6 +334,7 @@ export default function CheckoutView() {
         items={placedItems}
         total={placedTotal}
         whatsappUrl={whatsappUrl}
+        whatsappMessage={whatsappMessage}
       />
     );
   }
@@ -365,11 +344,15 @@ export default function CheckoutView() {
     if (
       !fullName.trim() ||
       phoneDigits(phone) < 10 ||
-      !city.trim() ||
+      phoneDigits(phone) > 15 ||
+      !province.trim() ||
+      !district.trim() ||
+      !municipality.trim() ||
+      !ward.trim() ||
       !address.trim()
     ) {
       setSubmitError(
-        "Please enter your full name, a valid WhatsApp number, city and landmark address.",
+        "Please enter your name, a valid phone number and complete delivery address.",
       );
       return;
     }
@@ -384,36 +367,40 @@ export default function CheckoutView() {
   };
 
   /* Build the WhatsApp order message from the cart snapshot + address */
-  const buildWhatsAppMessage = (orderNum: string) => {
+  const buildWhatsAppMessage = (
+    orderNum: string,
+    requestItems: OrderItem[],
+    productsSubtotal: number,
+  ) => {
     const lines: string[] = [];
-    lines.push(`*New KARMALU Order — #${orderNum}*`);
+    const brandName = brand === "originals" ? "KARMALU Originals" : "KARMALU Living & Decor";
+    lines.push(`*${brandName} order request — #${orderNum}*`);
     lines.push("");
     lines.push("*Items:*");
-    items.forEach((item) => {
+    requestItems.forEach((item) => {
       const sizeSuffix = item.size ? `, Size ${item.size}` : "";
       const colorSuffix = item.color ? `, ${item.color}` : "";
       lines.push(
-        `• ${item.name} (${item.category}${sizeSuffix}${colorSuffix}) ×${item.qty} — ${formatNpr(
-          item.price * item.qty,
+        `• ${item.name}${sizeSuffix}${colorSuffix} ×${item.quantity} — ${formatNpr(
+          item.price * item.quantity,
         )}`,
       );
     });
     lines.push("");
-    lines.push(`Subtotal: ${formatNpr(subtotal)}`);
-    if (discount > 0) lines.push(`Discount: -${formatNpr(discount)}`);
     lines.push(
-      `Shipping (${selectedMethod.label}): ${
-        shippingCost === 0 ? "Free" : formatNpr(shippingCost)
-      }`,
+      qualifiesForFreeShipping(productsSubtotal)
+        ? `Delivery: FREE (order over ${formatNpr(FREE_SHIPPING_THRESHOLD)}) — timing to be confirmed with the Karmalu team`
+        : "Delivery charge and timing: To be confirmed with the Karmalu team",
     );
-    lines.push(`*Total: ${formatNpr(total)}*`);
+    lines.push(`Products subtotal: ${formatNpr(productsSubtotal)}`);
+    lines.push("*This is a pending request, not a confirmed order.*");
     lines.push("");
     lines.push("*Deliver to:*");
     lines.push(fullName);
-    lines.push(`City: ${city}`);
-    lines.push(`Landmark: ${address}`);
-    lines.push(`Phone (WhatsApp): ${phone}`);
-    if (email) lines.push(`Email: ${email}`);
+    lines.push(`Province: ${province}`);
+    lines.push(`District: ${district}`);
+    lines.push(`Municipality: ${municipality}, Ward ${ward}`);
+    lines.push(`Address / landmark: ${address}`);
     if (notes) {
       lines.push("");
       lines.push(`*Notes:* ${notes}`);
@@ -424,12 +411,20 @@ export default function CheckoutView() {
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting) return;
+    if (WHATSAPP_NUMBER.length < 10 || WHATSAPP_NUMBER.length > 15) {
+      setSubmitError("WhatsApp ordering is not configured. Please contact Karmalu for help.");
+      return;
+    }
 
     // Client-side guard for required fields (server validates again).
     if (
       !fullName.trim() ||
       phoneDigits(phone) < 10 ||
-      !city.trim() ||
+      phoneDigits(phone) > 15 ||
+      !province.trim() ||
+      !district.trim() ||
+      !municipality.trim() ||
+      !ward.trim() ||
       !address.trim() ||
       items.length === 0
     ) {
@@ -450,42 +445,54 @@ export default function CheckoutView() {
           brand,
           customerName: fullName.trim(),
           whatsappNumber: phone.trim(),
-          email: email.trim() || undefined,
           address: {
             street: address.trim(),
-            city: city.trim(),
-            state: state.trim(),
-            zip: zip.trim(),
-            country,
+            province: province.trim(),
+            district: district.trim(),
+            municipality: municipality.trim(),
+            ward: ward.trim(),
+            country: "Nepal",
           },
           notes: notes.trim() || undefined,
           items: items.map((i) => ({
+            productSlug: i.slug,
             name: i.name,
             quantity: i.qty,
             price: i.price,
             size: i.size,
             color: i.color,
           })),
-          subtotal,
-          deliveryCharge: shippingCost,
-          total,
           deliveryMethod: selectedMethod.label,
-          paymentMethod: "WhatsApp (Cash/arranged)",
         }),
       });
 
       if (!res.ok) throw new Error(`Save failed (${res.status})`);
-      const { order } = (await res.json()) as { order: { orderId: string } };
+      const { order } = (await res.json()) as {
+        order: { orderId: string; items: OrderItem[]; subtotal: number };
+      };
 
       // 2. Only after a successful save, build the WhatsApp message + redirect.
-      const message = buildWhatsAppMessage(order.orderId);
+      const message = buildWhatsAppMessage(order.orderId, order.items, order.subtotal);
       const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
       window.open(url, "_blank", "noopener,noreferrer");
 
       setWhatsappUrl(url);
+      setWhatsappMessage(message);
       setOrderNumber(order.orderId);
-      setPlacedItems(items);
-      setPlacedTotal(total);
+      setPlacedItems(
+        items.map((item) => {
+          const saved = order.items.find(
+            (line) =>
+              line.productSlug === item.slug &&
+              line.size === item.size &&
+              line.color === item.color,
+          );
+          return saved
+            ? { ...item, name: saved.name, price: saved.price, qty: saved.quantity }
+            : item;
+        }),
+      );
+      setPlacedTotal(order.subtotal);
       setStep(3);
       cart.clear();
     } catch (err) {
@@ -495,10 +502,6 @@ export default function CheckoutView() {
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const handleApplyPromo = () => {
-    if (promoCode === "KARMALU10") setPromoApplied(true);
   };
 
   return (
@@ -525,7 +528,7 @@ export default function CheckoutView() {
                 <ArrowLeft size={15} /> Back
               </Link>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-[var(--color-ink)] mb-6">
-                Checkout
+                Order request
               </h1>
               <StepBar current={step} />
             </div>
@@ -560,35 +563,38 @@ export default function CheckoutView() {
                       placeholder="98XXXXXXXX"
                       className={field}
                     />
-                    {phoneDigits(phone) < 10 && (
+                    {(phoneDigits(phone) < 10 || phoneDigits(phone) > 15) && phone.length > 0 && (
                       <p className="text-xs text-[var(--brand)] mt-0.5">
-                        Please give a WhatsApp number.
+                        Enter a phone number with 10–15 digits, including the country code if needed.
                       </p>
                     )}
                   </div>
 
-                  {/* Email (optional, last) */}
-                  <div className="flex flex-col gap-1">
-                    <Label>Email address (optional)</Label>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@example.com"
-                      className={field}
-                    />
-                  </div>
                 </div>
 
                 <div className="bg-white rounded-2xl border border-[var(--color-ink)]/8 p-6 flex flex-col gap-4">
-                  <h2 className="font-bold text-[var(--color-ink)]">Shipping Address</h2>
-                  <div className="flex flex-col gap-1">
-                    <Label>City *</Label>
-                    <input required value={city} onChange={(e) => setCity(e.target.value)} placeholder="Kathmandu" className={field} />
+                  <h2 className="font-bold text-[var(--color-ink)]">Delivery address</h2>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="flex flex-col gap-1">
+                      <Label>Province *</Label>
+                      <input required value={province} onChange={(e) => setProvince(e.target.value)} placeholder="Bagmati" className={field} />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <Label>District *</Label>
+                      <input required value={district} onChange={(e) => setDistrict(e.target.value)} placeholder="Kathmandu" className={field} />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <Label>Municipality / rural municipality *</Label>
+                      <input required value={municipality} onChange={(e) => setMunicipality(e.target.value)} placeholder="Municipality name" className={field} />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <Label>Ward number *</Label>
+                      <input required inputMode="numeric" value={ward} onChange={(e) => setWard(e.target.value)} placeholder="Ward" className={field} />
+                    </div>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <Label>Landmark address *</Label>
-                    <input required value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Near XYZ, street / area" className={field} />
+                    <Label>Street, area and landmark *</Label>
+                    <textarea required rows={3} value={address} onChange={(e) => setAddress(e.target.value)} placeholder="House / street, area and a nearby landmark" className={field + " resize-y"} />
                   </div>
                 </div>
 
@@ -605,18 +611,18 @@ export default function CheckoutView() {
                   type="submit"
                   className="w-full py-4 rounded-2xl bg-[var(--brand)] text-white font-extrabold text-sm uppercase tracking-widest hover:bg-[var(--brand-dark)] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
                 >
-                  Continue to Shipping <ArrowRight size={17} />
+                  Continue to Delivery <ArrowRight size={17} />
                 </button>
               </form>
             )}
 
-            {/* ── STEP 1: Shipping method ── */}
+            {/* ── STEP 1: Delivery details ── */}
             {step === 1 && (
               <form onSubmit={handleShippingNext} className="flex flex-col gap-5">
                 <div className="bg-white rounded-2xl border border-[var(--color-ink)]/8 p-6 flex flex-col gap-4">
                   {/* Recap */}
                   <div className="flex items-center justify-between">
-                    <h2 className="font-bold text-[var(--color-ink)]">Delivery Method</h2>
+                    <h2 className="font-bold text-[var(--color-ink)]">Delivery details</h2>
                     <button type="button" onClick={() => setStep(0)} className="text-xs text-[var(--brand)] font-semibold hover:underline">
                       Edit address
                     </button>
@@ -624,18 +630,19 @@ export default function CheckoutView() {
 
                   <div className="text-sm text-[var(--color-ink-muted)] bg-[var(--color-beige)]/60 rounded-xl px-4 py-3">
                     <p className="font-semibold text-[var(--color-ink)]">{fullName}</p>
-                    <p>{city} · {address}</p>
-                    <p>{phone}{email ? ` · ${email}` : ""}</p>
+                    <p>{province} Province · {district} District</p>
+                    <p>{municipality}, Ward {ward} · {address}</p>
+                    <p>{phone}</p>
                   </div>
 
                   <div className="flex flex-col gap-2 mt-1">
                     {SHIPPING_METHODS.map((m) => {
-                      const cost = m.price;
                       const active = shippingMethod === m.id;
                       return (
                         <button
                           key={m.id}
                           type="button"
+                          aria-pressed={active}
                           onClick={() => setShippingMethod(m.id)}
                           className={`flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-all ${
                             active
@@ -652,8 +659,8 @@ export default function CheckoutView() {
                             <p className="font-semibold text-sm text-[var(--color-ink)]">{m.label}</p>
                             <p className="text-xs text-[var(--color-ink-muted)]">{m.detail}</p>
                           </div>
-                          <span className="font-bold text-sm text-[var(--color-ink)] shrink-0">
-                            {qualifiesForFreeShipping(subtotal) ? "Free" : formatNpr(cost)}
+                          <span className="max-w-28 text-right text-xs font-semibold text-[var(--color-ink-muted)]">
+                            Confirmed later
                           </span>
                         </button>
                       );
@@ -665,7 +672,7 @@ export default function CheckoutView() {
                   type="submit"
                   className="w-full py-4 rounded-2xl bg-[var(--brand)] text-white font-extrabold text-sm uppercase tracking-widest hover:bg-[var(--brand-dark)] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
                 >
-                  Continue to Payment <ArrowRight size={17} />
+                  Continue to Review <ArrowRight size={17} />
                 </button>
                 <button type="button" onClick={() => setStep(0)} className="text-sm text-center text-[var(--color-ink-muted)] hover:text-[var(--brand)] transition-colors">
                   ← Back
@@ -707,8 +714,9 @@ export default function CheckoutView() {
                     <button type="button" onClick={() => setStep(0)} className="text-[var(--brand)] font-semibold hover:underline">Edit</button>
                   </div>
                   <p className="font-semibold text-[var(--color-ink)]">{fullName}</p>
-                  <p className="text-[var(--color-ink-muted)]">{city} · {address}</p>
-                  <p className="text-[var(--color-ink-muted)]">{phone}{email ? ` · ${email}` : ""}</p>
+                  <p className="text-[var(--color-ink-muted)]">{province} Province · {district} District</p>
+                  <p className="text-[var(--color-ink-muted)]">{municipality}, Ward {ward} · {address}</p>
+                  <p className="text-[var(--color-ink-muted)]">{phone}</p>
                   <p className="text-[var(--color-ink-muted)] pt-1">{selectedMethod.label} · {selectedMethod.detail}</p>
                 </div>
 
@@ -728,10 +736,8 @@ export default function CheckoutView() {
                 <div className="flex items-start gap-3 bg-[#25D366]/10 border border-[#25D366]/30 rounded-2xl p-4 text-sm">
                   <WhatsApp size={20} className="text-[#25D366] mt-0.5 shrink-0" />
                   <p className="text-[var(--color-ink-muted)]">
-                    Your order is recorded first, then your summary and delivery
-                    details are sent to us on
-                    <span className="font-semibold text-[var(--color-ink)]"> WhatsApp</span> to
-                    confirm and arrange payment. No card details needed here.
+                    This creates a pending request. Continue to
+                    <span className="font-semibold text-[var(--color-ink)]"> WhatsApp</span> to send it; our team will then confirm product availability, delivery and the final amount.
                   </p>
                 </div>
 
@@ -752,7 +758,7 @@ export default function CheckoutView() {
                   <WhatsApp size={17} />{" "}
                   {submitting
                     ? "Saving your order…"
-                    : `Confirm Order — ${formatNpr(total)}`}
+                    : `Save order request — ${formatNpr(subtotal)}`}
                 </button>
                 <button type="button" onClick={() => setStep(1)} className="text-sm text-center text-[var(--color-ink-muted)] hover:text-[var(--brand)] transition-colors">
                   ← Back
@@ -765,12 +771,6 @@ export default function CheckoutView() {
           <OrderSummary
             subtotal={subtotal}
             shippingCost={shippingCost}
-            shippingKnown={step >= 1}
-            discount={discount}
-            promoCode={promoCode}
-            setPromoCode={setPromoCode}
-            onApplyPromo={handleApplyPromo}
-            promoApplied={promoApplied}
           />
         </div>
       </div>
